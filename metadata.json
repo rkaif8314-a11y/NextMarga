@@ -1,0 +1,6 @@
+{
+  "name": "NextMarga - Student Opportunity & Roadmap Platform",
+  "description": "Personalized student platform for competitions, scholarships, exams, internships, interactive roadmaps, and Career AI guidance.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
