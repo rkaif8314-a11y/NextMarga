@@ -1,0 +1,155 @@
+import React, { useState } from 'react';
+import { Check, ArrowRight } from 'lucide-react';
+import { UserProfile, RoadmapPhase, AppScreen } from '../types';
+import { sampleRoadmapPhases, sampleCareerOutcomes } from '../data/mockData';
+
+interface RoadmapScreenProps {
+  profile: UserProfile;
+  onNavigate: (screen: AppScreen) => void;
+}
+
+export const RoadmapScreen: React.FC<RoadmapScreenProps> = ({ profile, onNavigate }) => {
+  const [phases, setPhases] = useState<RoadmapPhase[]>(sampleRoadmapPhases);
+
+  const toggleGoal = (phaseId: string, goalId: string) => {
+    setPhases((prev) =>
+      prev.map((p) => {
+        if (p.id === phaseId) {
+          return {
+            ...p,
+            goals: p.goals.map((g) => (g.id === goalId ? { ...g, completed: !g.completed } : g)),
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 pt-4 pb-28 space-y-6 animate-fadeIn">
+      {/* Title & Path Badge */}
+      <div className="border-b border-white/10 pb-4">
+        <span className="text-[10px] uppercase tracking-[0.3em] text-white/40 block mb-1 font-medium">Trajectory Planner</span>
+        <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight uppercase">
+          Personalized Roadmap
+        </h1>
+        <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded text-[10px] uppercase tracking-[0.15em] font-mono bg-white/5 text-white/80 border border-white/15">
+          <span>TARGET DOMAIN //</span>
+          <span className="text-[#F5F2ED] font-semibold">{profile.targetPath || 'Engineering & Computational Research'}</span>
+        </div>
+      </div>
+
+      {/* Main Roadmap Phases (NOW, NEXT, LATER) */}
+      <div className="space-y-5">
+        {phases.map((phase) => (
+          <div
+            key={phase.id}
+            className="bg-[#121212] border border-white/10 rounded-2xl p-6 hover:border-white/20 transition-all space-y-4 shadow-sm"
+          >
+            {/* Header: Tag + Timeframe badge */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-2">
+              <span className="text-[10px] font-mono tracking-[0.25em] text-white/50 uppercase font-medium">
+                PHASE // {phase.phaseTag}
+              </span>
+              <span className="text-[10px] font-mono text-white/60 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded">
+                {phase.timeframe}
+              </span>
+            </div>
+
+            {/* Large Phase Title */}
+            <h2 className="text-xl sm:text-2xl font-serif-luxury font-medium text-[#F5F2ED]">
+              {phase.phase}
+            </h2>
+
+            {/* Checkbox Goals if present */}
+            {phase.goals && phase.goals.length > 0 && (
+              <div className="space-y-2 pt-1">
+                {phase.goals.map((goal) => (
+                  <button
+                    key={goal.id}
+                    onClick={() => toggleGoal(phase.id, goal.id)}
+                    className="w-full flex items-center gap-3 p-3 bg-[#0A0A0A] hover:bg-white/5 border border-white/10 rounded-xl transition-colors text-left group"
+                  >
+                    <div
+                      className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                        goal.completed
+                          ? 'bg-[#F5F2ED] border-[#F5F2ED] text-black'
+                          : 'border-white/30 bg-transparent group-hover:border-white/60'
+                      }`}
+                    >
+                      {goal.completed && <Check className="w-3 h-3 stroke-[3]" />}
+                    </div>
+                    <span
+                      className={`text-xs tracking-wide ${
+                        goal.completed ? 'line-through text-white/30' : 'text-white/80 font-light'
+                      }`}
+                    >
+                      {goal.text}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Description if present */}
+            {phase.description && (
+              <p className="text-xs sm:text-sm text-white/60 font-light leading-relaxed">
+                {phase.description}
+              </p>
+            )}
+
+            {/* CTA Button if present */}
+            {phase.ctaText && (
+              <button
+                onClick={() => onNavigate('explore')}
+                className="mt-2 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-[#F5F2ED] hover:bg-white text-black text-xs uppercase tracking-[0.15em] font-medium shadow-sm transition-all"
+              >
+                <span>{phase.ctaText}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Potential Outcomes Horizontal Carousel */}
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-medium">Trajectory Forecast</span>
+          <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-[#F5F2ED]">
+            Potential Outcomes
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {sampleCareerOutcomes.map((outcome) => (
+            <div
+              key={outcome.id}
+              className="bg-[#121212] border border-white/10 rounded-xl p-5 space-y-2.5 hover:border-white/20 transition-all"
+            >
+              <div className="text-[10px] font-mono text-white/40 uppercase tracking-[0.2em]">
+                {outcome.pathLabel}
+              </div>
+              <h3 className="font-serif-luxury font-medium text-[#F5F2ED] text-base">
+                {outcome.title}
+              </h3>
+              <p className="text-xs text-white/60 font-light leading-relaxed">
+                {outcome.description}
+              </p>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {outcome.tags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="text-[9px] uppercase tracking-wider font-mono bg-white/5 border border-white/10 text-white/70 px-2 py-0.5 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
