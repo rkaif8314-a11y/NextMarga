@@ -20,7 +20,6 @@ import { getPersonalizedOpportunities } from './lib/opportunities';
 import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, applyToOpportunity, updateApplicationStatus } from './lib/applications';
 import { getMyNotifications, getDeadlineNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
 import { syncMyRoadmapWithProfile } from './lib/roadmap';
-import { signOut } from './lib/auth';
 
 const protectedScreens: AppScreen[] = ['home', 'detail', 'roadmap', 'explore', 'applications', 'assessment', 'notifications', 'profile'];
 
@@ -222,15 +221,6 @@ export function App() {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      setAppError('');
-      await signOut();
-    } catch (error) {
-      setAppError(error instanceof Error ? error.message : 'Could not sign out.');
-    }
-  };
-
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
@@ -251,7 +241,7 @@ export function App() {
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => void navigate(scr)} onStartAssessment={() => void navigate('assessment')} onUpdateStatus={(id, status) => void handleUpdateApplicationStatus(id, status)} />}
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => void navigate('applications')} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
-      {currentScreen === 'profile' && <ProfileScreen profile={profile} userEmail={userEmail} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} onSignOut={handleSignOut} />}
+      {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
     </main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => void navigate(scr)} />}
   </div>;
