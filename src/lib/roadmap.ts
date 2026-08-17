@@ -36,6 +36,20 @@ export async function ensureMyRoadmap(profile: UserProfile): Promise<RoadmapPhas
   return getMyRoadmap();
 }
 
+export async function syncMyRoadmapWithProfile(profile: UserProfile): Promise<RoadmapPhase[]> {
+  const existing = await getMyRoadmap();
+  if (!existing.length) return ensureMyRoadmap(profile);
+  const desired = buildPhases(profile);
+  for (let i = 0; i < desired.length; i++) {
+    const current = existing[i];
+    const next = desired[i];
+    if (!current) continue;
+    const { error } = await supabase.from('roadmap_phases').update({ phase_tag: next.phaseTag, timeframe: next.timeframe, title: next.title, description: next.description, cta_text: next.ctaText, cta_action: next.ctaAction }).eq('id', current.id);
+    if (error) throw new Error(error.message);
+  }
+  return getMyRoadmap();
+}
+
 export async function setRoadmapGoalCompleted(goalId: string, completed: boolean) {
   const { error } = await supabase.from('roadmap_goals').update({ completed }).eq('id', goalId);
   if (error) throw new Error(error.message);
