@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
 import { initialProfile, sampleOpportunities, sampleNotifications, sampleApplications } from './data/mockData';
 import { TopHeader } from './components/TopHeader';
 import { BottomNav } from './components/BottomNav';
 import { LandingScreen } from './components/LandingScreen';
+import { AuthScreen } from './components/AuthScreen';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { HomeScreen } from './components/HomeScreen';
 import { OpportunityDetailScreen } from './components/OpportunityDetailScreen';
@@ -13,9 +14,13 @@ import { ApplicationsScreen } from './components/ApplicationsScreen';
 import { AssessmentScreen } from './components/AssessmentScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { supabase } from './lib/supabase';
+import { getUserProfile, saveUserProfile } from './lib/profile';
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
+  const [authLoading, setAuthLoading] = useState(true);
+  const [appError, setAppError] = useState('');
   const [profile, setProfile] = useState<UserProfile>(() => {
     const cached = localStorage.getItem('nextmarga_profile');
     if (cached) {
@@ -32,7 +37,58 @@ export function App() {
   const [notifications, setNotifications] = useState<AppNotification[]>(sampleNotifications);
   const [applications, setApplications] = useState<ApplicationItem[]>(sampleApplications);
 
-  // Save profile changes to local storage
+  const loadAuthenticatedUser = useCallback(async () => {
+    setAppError('');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setCurrentScreen('landing');
+        return;
+      }
+
+      const remoteProfile = await getUserProfile();
+      if (remoteProfile && remoteProfile.fullName.trim()) {
+        setProfile(remoteProfile);
+        setCurrentScreen('home');
+      } else {
+        setCurrentScreen('onboarding');
+      }
+    } catch (error) {
+      console.error(error);
+      setAppError(error instanceof Error ? error.message : 'Could not load your account.');
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!active) return;
+      if (session?.user) {
+        await loadAuthenticatedUser();
+      }
+      if (active) setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (event === 'SIGNED_IN' && session?.user) {
+        window.setTimeout(() => {
+          if (active) void loadAuthenticatedUser();
+        }, 0);
+      } else if (event === 'SIGNED_OUT') {
+        setProfile(initialProfile);
+        localStorage.removeItem('nextmarga_profile');
+        setCurrentScreen('landing');
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [loadAuthenticatedUser]);
+
   useEffect(() => {
     localStorage.setItem('nextmarga_profile', JSON.stringify(profile));
   }, [profile]);
@@ -40,11 +96,7 @@ export function App() {
   const handleToggleSaveOpportunity = (oppId: string) => {
     setSavedOpportunityIds((prev) => {
       const exists = prev.includes(oppId);
-      if (exists) {
-        return prev.filter((id) => id !== oppId);
-      } else {
-        return [...prev, oppId];
-      }
+      return exists ? prev.filter((id) => id !== oppId) : [...prev, oppId];
     });
   };
 
@@ -66,9 +118,7 @@ export function App() {
   };
 
   const handleSelectNotification = (notif: AppNotification) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notif.id ? { ...n, unread: false } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === notif.id ? { ...n, unread: false } : n)));
     if (notif.actionScreen === 'detail' && notif.actionId) {
       handleSelectOpportunityById(notif.actionId);
     } else if (notif.actionScreen) {
@@ -77,13 +127,22 @@ export function App() {
   };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-xs uppercase tracking-[0.3em] text-white/40">NextMarga</div>
+          <div className="mt-3 text-sm text-white/60">Preparing your opportunity path...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex flex-col font-sans selection:bg-white/20 selection:text-white">
-      {/* Top Header on primary tabs */}
       {showTopHeader && (
         <TopHeader
           profile={profile}
@@ -92,21 +151,42 @@ export function App() {
         />
       )}
 
-      {/* Screen Render Switch */}
+      {appError && (
+        <div className="mx-auto w-full max-w-xl px-5 pt-4">
+          <div className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3 text-xs text-red-200">
+            {appError}
+          </div>
+        </div>
+      )}
+
       <main className="flex-1">
         {currentScreen === 'landing' && (
           <LandingScreen
             onNavigate={(scr) => setCurrentScreen(scr)}
-            onStartOnboarding={() => setCurrentScreen('onboarding')}
+            onStartOnboarding={() => setCurrentScreen('auth')}
+          />
+        )}
+
+        {currentScreen === 'auth' && (
+          <AuthScreen
+            onBack={() => setCurrentScreen('landing')}
+            onAuthenticated={() => void loadAuthenticatedUser()}
           />
         )}
 
         {currentScreen === 'onboarding' && (
           <OnboardingWizard
             initialProfile={profile}
-            onComplete={(updated) => {
-              setProfile(updated);
-              setCurrentScreen('home');
+            onComplete={async (updated) => {
+              try {
+                setAppError('');
+                await saveUserProfile(updated);
+                setProfile(updated);
+                setCurrentScreen('home');
+              } catch (error) {
+                console.error(error);
+                setAppError(error instanceof Error ? error.message : 'Could not save your profile.');
+              }
             }}
             onCancel={() => setCurrentScreen('home')}
           />
@@ -133,12 +213,7 @@ export function App() {
           />
         )}
 
-        {currentScreen === 'roadmap' && (
-          <RoadmapScreen
-            profile={profile}
-            onNavigate={(scr) => setCurrentScreen(scr)}
-          />
-        )}
+        {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => setCurrentScreen(scr)} />}
 
         {currentScreen === 'explore' && (
           <CareerAIChatScreen
@@ -156,12 +231,7 @@ export function App() {
           />
         )}
 
-        {currentScreen === 'assessment' && (
-          <AssessmentScreen
-            profile={profile}
-            onExit={() => setCurrentScreen('applications')}
-          />
-        )}
+        {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => setCurrentScreen('applications')} />}
 
         {currentScreen === 'notifications' && (
           <NotificationsScreen
@@ -176,18 +246,21 @@ export function App() {
           <ProfileScreen
             profile={profile}
             onBack={() => setCurrentScreen('home')}
-            onSave={(updated) => setProfile(updated)}
+            onSave={async (updated) => {
+              try {
+                await saveUserProfile(updated);
+                setProfile(updated);
+              } catch (error) {
+                setAppError(error instanceof Error ? error.message : 'Could not save your profile.');
+              }
+            }}
             onStartOnboarding={() => setCurrentScreen('onboarding')}
           />
         )}
       </main>
 
-      {/* Persistent Bottom Navigation Bar */}
       {showBottomNav && (
-        <BottomNav
-          currentScreen={currentScreen}
-          onNavigate={(scr) => setCurrentScreen(scr)}
-        />
+        <BottomNav currentScreen={currentScreen} onNavigate={(scr) => setCurrentScreen(scr)} />
       )}
     </div>
   );
