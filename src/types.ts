@@ -19,6 +19,7 @@ export interface UserProfile {
 export interface Opportunity {
   id: string;
   title: string;
+  organization?: string;
   category: 'competition' | 'scholarship' | 'exam' | 'internship' | 'fellowship';
   isVerified: boolean;
   isGovt: boolean;
@@ -40,6 +41,13 @@ export interface Opportunity {
   }[];
   officialUrl?: string;
   accentColor?: string;
+  minimumClass?: string | null;
+  maximumClass?: string | null;
+  minimumAge?: number | null;
+  maximumAge?: number | null;
+  states?: string[];
+  boards?: string[];
+  interests?: string[];
 }
 
 export interface ApplicationItem {
