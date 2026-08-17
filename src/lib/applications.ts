@@ -24,6 +24,16 @@ export async function toggleSavedOpportunity(opportunityId: string): Promise<boo
   return true;
 }
 
+export async function applyToOpportunity(opportunityId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Please sign in first.');
+  const { error } = await supabase.from('applications').upsert(
+    { user_id: user.id, opportunity_id: opportunityId, status: 'Applied', applied_date: new Date().toISOString() },
+    { onConflict: 'user_id,opportunity_id' },
+  );
+  if (error) throw new Error(error.message);
+}
+
 export async function getMyApplications(): Promise<ApplicationItem[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
