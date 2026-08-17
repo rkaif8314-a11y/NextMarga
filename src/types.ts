@@ -107,6 +107,7 @@ export interface ChatMessage {
 
 export type AppScreen =
   | 'landing'
+  | 'auth'
   | 'home'
   | 'explore'
   | 'roadmap'
