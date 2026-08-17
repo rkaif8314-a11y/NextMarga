@@ -19,6 +19,7 @@ import { getUserProfile, saveUserProfile } from './lib/profile';
 import { getPersonalizedOpportunities } from './lib/opportunities';
 import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, applyToOpportunity, updateApplicationStatus } from './lib/applications';
 import { getMyNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
+import { syncMyRoadmapWithProfile } from './lib/roadmap';
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
@@ -168,6 +169,30 @@ export function App() {
     }
   };
 
+  const handleProfileSave = async (updated: UserProfile) => {
+    try {
+      setAppError('');
+      await saveUserProfile(updated);
+      setProfile(updated);
+      await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]);
+    } catch (error) {
+      setAppError(error instanceof Error ? error.message : 'Could not save your profile.');
+    }
+  };
+
+  const handleOnboardingComplete = async (updated: UserProfile) => {
+    try {
+      setAppError('');
+      await saveUserProfile(updated);
+      setProfile(updated);
+      await loadUserData();
+      await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]);
+      setCurrentScreen('home');
+    } catch (error) {
+      setAppError(error instanceof Error ? error.message : 'Could not save your profile.');
+    }
+  };
+
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
@@ -180,7 +205,7 @@ export function App() {
     <main className="flex-1">
       {currentScreen === 'landing' && <LandingScreen onNavigate={(scr) => setCurrentScreen(scr)} onStartOnboarding={() => setCurrentScreen('auth')} />}
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
-      {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={async (updated) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await loadUserData(); await loadOpportunities(updated); setCurrentScreen('home'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } }} onCancel={() => setCurrentScreen('home')} />}
+      {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={handleOnboardingComplete} onCancel={() => setCurrentScreen('home')} />}
       {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => setCurrentScreen(scr)} />}
       {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => setCurrentScreen('home')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={() => void handleApplyOpportunity(selectedOpportunity.id)} onStartAssessment={() => setCurrentScreen('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => setCurrentScreen(scr)} />}
@@ -188,7 +213,7 @@ export function App() {
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => setCurrentScreen(scr)} onStartAssessment={() => setCurrentScreen('assessment')} onUpdateStatus={(id, status) => void handleUpdateApplicationStatus(id, status)} />}
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => setCurrentScreen('applications')} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => setCurrentScreen('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
-      {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => setCurrentScreen('home')} onSave={async (updated) => { try { await saveUserProfile(updated); setProfile(updated); await loadOpportunities(updated); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } }} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
+      {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => setCurrentScreen('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
     </main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => setCurrentScreen(scr)} />}
   </div>;
