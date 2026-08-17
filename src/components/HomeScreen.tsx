@@ -22,6 +22,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ profile, opportunities, 
   const [sortBy, setSortBy] = useState<'match' | 'deadline' | 'title'>('match');
 
   const availableCategories = useMemo(() => Array.from(new Set(opportunities.map((opp) => opp.category))), [opportunities]);
+  const urgentCount = useMemo(() => {
+    const now = Date.now();
+    const week = now + 7 * 24 * 60 * 60 * 1000;
+    return opportunities.filter((opp) => {
+      if (!opp.deadline) return false;
+      const deadline = new Date(opp.deadline).getTime();
+      return Number.isFinite(deadline) && deadline >= now && deadline <= week;
+    }).length;
+  }, [opportunities]);
+  const verifiedCount = useMemo(() => opportunities.filter((opp) => opp.isVerified).length, [opportunities]);
+  const governmentCount = useMemo(() => opportunities.filter((opp) => opp.isGovt).length, [opportunities]);
+
   const filteredOpps = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     const result = opportunities.filter((opp) => {
@@ -43,6 +55,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ profile, opportunities, 
 
   return <div className="max-w-2xl mx-auto px-4 pt-4 pb-24 space-y-6 animate-fadeIn">
     <div className="relative"><div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"><Search className="w-4 h-4" /></div><input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search scholarships, exams, internships, jobs..." className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 text-xs tracking-wide focus:outline-none focus:ring-1 focus:ring-white/40" /></div>
+
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {[
+        { label: 'Matched', value: opportunities.length, action: () => { setSelectedCategory(null); setGovernmentOnly(false); } },
+        { label: 'Verified', value: verifiedCount, action: () => setVerifiedOnly(true) },
+        { label: 'Government', value: governmentCount, action: () => setGovernmentOnly(true) },
+        { label: 'Due in 7d', value: urgentCount, action: () => setSortBy('deadline') },
+      ].map((stat) => <button key={stat.label} onClick={stat.action} className="text-left p-3 rounded-xl bg-[#121212] border border-white/10 hover:border-white/25 transition-colors"><div className="text-[9px] uppercase tracking-[0.18em] text-white/40">{stat.label}</div><div className="mt-1 text-lg font-serif-luxury">{stat.value}</div></button>)}
+    </div>
+
+    <div className="p-4 rounded-xl border border-white/10 bg-[#121212] flex items-center gap-3.5"><Sparkles className="w-4 h-4 shrink-0" /><div className="flex-1"><span className="text-[9px] uppercase tracking-[0.2em] text-white/40 block">Personalized path</span><div className="font-serif-luxury text-sm">{profile.currentClass ? `Built for Class ${profile.currentClass}` : 'Complete your profile for better matches'}</div><div className="text-xs text-white/50 mt-0.5">{profile.state || 'India'}{profile.interests?.length ? ` • ${profile.interests.slice(0, 2).join(' • ')}` : ''}</div></div><button onClick={() => onNavigate('profile')} className="text-[10px] uppercase tracking-[0.15em] text-white/60 hover:text-white">Profile</button></div>
 
     <div>
       <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2"><span className="text-[10px] uppercase tracking-[0.2em] text-white/40">Curated Tracks</span><h2 className="text-xs uppercase tracking-[0.2em] font-medium">Explore Categories</h2></div>
