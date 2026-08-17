@@ -16,7 +16,29 @@ export async function signUpWithEmail(
 }
 
 export async function signInWithEmail(email: string, password: string) {
-  return await supabase.auth.signInWithPassword({ email, password });
+  return await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+}
+
+export async function signInWithOtp(email: string) {
+  return await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: window.location.origin,
+    },
+  });
+}
+
+export async function signInWithGoogle() {
+  return await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
 }
 
 export async function signOut() {
