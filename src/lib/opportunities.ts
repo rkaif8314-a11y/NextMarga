@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { Opportunity } from '../types';
+import { Opportunity, UserProfile } from '../types';
+import { evaluateEligibility } from './eligibility';
 
 interface OpportunityRow {
   id: string;
@@ -49,6 +50,7 @@ function mapOpportunity(row: OpportunityRow): Opportunity {
   return {
     id: row.id,
     title: row.title,
+    organization: row.organization,
     category: row.category === 'job' || row.category === 'other' ? 'fellowship' : row.category,
     isVerified: row.is_verified,
     isGovt: row.is_govt,
@@ -60,10 +62,17 @@ function mapOpportunity(row: OpportunityRow): Opportunity {
     eligibility: row.eligibility ?? buildEligibilitySummary(row),
     description: row.description ?? '',
     whyConsider: row.why_consider ?? '',
-    aiMatchReason: 'Personalized match will be calculated from your profile.',
+    aiMatchReason: 'Checking your eligibility…',
     requiredDocs: row.required_docs ?? [],
     timeline: [],
     officialUrl: row.official_url ?? undefined,
+    minimumClass: row.minimum_class,
+    maximumClass: row.maximum_class,
+    minimumAge: row.minimum_age,
+    maximumAge: row.maximum_age,
+    states: row.states ?? [],
+    boards: row.boards ?? [],
+    interests: row.interests ?? [],
   };
 }
 
@@ -77,4 +86,20 @@ export async function getVerifiedOpportunities(limit = 100): Promise<Opportunity
 
   if (error) throw new Error(error.message);
   return ((data ?? []) as OpportunityRow[]).map(mapOpportunity);
+}
+
+export async function getPersonalizedOpportunities(profile: UserProfile, limit = 50): Promise<Opportunity[]> {
+  const opportunities = await getVerifiedOpportunities(limit);
+
+  return opportunities
+    .map((opportunity) => {
+      const result = evaluateEligibility(opportunity, profile);
+      return {
+        ...opportunity,
+        matchScore: result.score,
+        aiMatchReason: result.reason,
+      };
+    })
+    .filter((opportunity) => opportunity.matchScore === undefined || opportunity.matchScore >= 40)
+    .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
 }
