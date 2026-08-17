@@ -17,6 +17,7 @@ import { ProfileScreen } from './components/ProfileScreen';
 import { supabase } from './lib/supabase';
 import { getUserProfile, saveUserProfile } from './lib/profile';
 import { getPersonalizedOpportunities } from './lib/opportunities';
+import { getSavedOpportunityIds, toggleSavedOpportunity } from './lib/applications';
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
@@ -38,12 +39,21 @@ export function App() {
     setOpportunitiesLoading(true);
     try {
       const personalized = await getPersonalizedOpportunities(userProfile);
-      if (personalized.length > 0) setOpportunities(personalized);
+      setOpportunities(personalized.length > 0 ? personalized : []);
     } catch (error) {
       console.error(error);
       setAppError(error instanceof Error ? error.message : 'Could not load opportunities.');
     } finally {
       setOpportunitiesLoading(false);
+    }
+  }, []);
+
+  const loadSavedOpportunities = useCallback(async () => {
+    try {
+      const ids = await getSavedOpportunityIds();
+      setSavedOpportunityIds(ids);
+    } catch (error) {
+      console.error(error);
     }
   }, []);
 
@@ -53,6 +63,7 @@ export function App() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setCurrentScreen('landing'); return; }
       const remoteProfile = await getUserProfile();
+      await loadSavedOpportunities();
       if (remoteProfile && remoteProfile.fullName.trim()) {
         setProfile(remoteProfile);
         setCurrentScreen('home');
@@ -62,7 +73,7 @@ export function App() {
       console.error(error);
       setAppError(error instanceof Error ? error.message : 'Could not load your account.');
     }
-  }, [loadOpportunities]);
+  }, [loadOpportunities, loadSavedOpportunities]);
 
   useEffect(() => {
     let active = true;
@@ -75,7 +86,11 @@ export function App() {
       if (!active) return;
       if (event === 'SIGNED_IN' && session?.user) window.setTimeout(() => { if (active) void loadAuthenticatedUser(); }, 0);
       else if (event === 'SIGNED_OUT') {
-        setProfile(initialProfile); setOpportunities(sampleOpportunities); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing');
+        setProfile(initialProfile);
+        setOpportunities(sampleOpportunities);
+        setSavedOpportunityIds([]);
+        localStorage.removeItem('nextmarga_profile');
+        setCurrentScreen('landing');
       }
     });
     return () => { active = false; subscription.unsubscribe(); };
@@ -83,7 +98,16 @@ export function App() {
 
   useEffect(() => { localStorage.setItem('nextmarga_profile', JSON.stringify(profile)); }, [profile]);
 
-  const handleToggleSaveOpportunity = (oppId: string) => setSavedOpportunityIds((prev) => prev.includes(oppId) ? prev.filter((id) => id !== oppId) : [...prev, oppId]);
+  const handleToggleSaveOpportunity = async (oppId: string) => {
+    try {
+      setAppError('');
+      const saved = await toggleSavedOpportunity(oppId);
+      setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId));
+    } catch (error) {
+      setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.');
+    }
+  };
+
   const handleSelectOpportunity = (opp: Opportunity) => { setSelectedOpportunity(opp); setCurrentScreen('detail'); };
   const handleSelectOpportunityById = (id: string) => { const match = opportunities.find((o) => o.id === id); if (match) { setSelectedOpportunity(match); setCurrentScreen('detail'); } };
   const handleMarkAllNotificationsRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
@@ -102,7 +126,7 @@ export function App() {
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
       {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={async (updated) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await loadOpportunities(updated); setCurrentScreen('home'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } }} onCancel={() => setCurrentScreen('home')} />}
       {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => setCurrentScreen(scr)} />}
-      {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => setCurrentScreen('home')} onToggleSave={() => handleToggleSaveOpportunity(selectedOpportunity.id)} onStartAssessment={() => setCurrentScreen('assessment')} />}
+      {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => setCurrentScreen('home')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onStartAssessment={() => setCurrentScreen('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => setCurrentScreen(scr)} />}
       {currentScreen === 'explore' && <CareerAIChatScreen profile={profile} onSelectOpportunityById={handleSelectOpportunityById} onNavigate={(scr) => setCurrentScreen(scr)} />}
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => setCurrentScreen(scr)} onStartAssessment={() => setCurrentScreen('assessment')} />}
