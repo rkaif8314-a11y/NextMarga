@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { Opportunity, UserProfile } from '../types';
-import { evaluateEligibility } from './eligibility';
+import { rankOpportunities } from './eligibility';
 
 interface OpportunityRow {
   id: string;
@@ -26,9 +26,20 @@ interface OpportunityRow {
   interests: string[] | null;
 }
 
+type MatchableOpportunity = Opportunity & {
+  minimumClass?: string | null;
+  maximumClass?: string | null;
+  minimumAge?: number | null;
+  maximumAge?: number | null;
+  states?: string[] | null;
+  boards?: string[] | null;
+  interests?: string[] | null;
+};
+
 function formatDeadline(deadline: string | null) {
   if (!deadline) return { display: 'No deadline listed', remaining: '' };
   const date = new Date(deadline);
+  if (Number.isNaN(date.getTime())) return { display: 'Deadline to be confirmed', remaining: '' };
   const display = new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
   const diffMs = date.getTime() - Date.now();
   if (diffMs <= 0) return { display, remaining: 'Closed' };
@@ -45,7 +56,7 @@ function buildEligibilitySummary(row: OpportunityRow) {
   return parts.join(' · ') || 'Eligibility details will be checked before applying.';
 }
 
-function mapOpportunity(row: OpportunityRow): Opportunity {
+function mapOpportunity(row: OpportunityRow): MatchableOpportunity {
   const deadline = formatDeadline(row.deadline);
   return {
     id: row.id,
@@ -62,7 +73,7 @@ function mapOpportunity(row: OpportunityRow): Opportunity {
     eligibility: row.eligibility ?? buildEligibilitySummary(row),
     description: row.description ?? '',
     whyConsider: row.why_consider ?? '',
-    aiMatchReason: 'Checking your eligibility…',
+    aiMatchReason: 'Matched to your profile',
     requiredDocs: row.required_docs ?? [],
     timeline: [],
     officialUrl: row.official_url ?? undefined,
@@ -76,7 +87,7 @@ function mapOpportunity(row: OpportunityRow): Opportunity {
   };
 }
 
-export async function getVerifiedOpportunities(limit = 100): Promise<Opportunity[]> {
+export async function getVerifiedOpportunities(limit = 100): Promise<MatchableOpportunity[]> {
   const { data, error } = await supabase
     .from('opportunities')
     .select('id,title,organization,category,is_verified,is_govt,deadline,fee,mode,eligibility,description,why_consider,required_docs,official_url,minimum_class,maximum_class,minimum_age,maximum_age,states,boards,interests')
@@ -90,16 +101,17 @@ export async function getVerifiedOpportunities(limit = 100): Promise<Opportunity
 
 export async function getPersonalizedOpportunities(profile: UserProfile, limit = 50): Promise<Opportunity[]> {
   const opportunities = await getVerifiedOpportunities(limit);
+  const matches = rankOpportunities(opportunities, {
+    currentClass: profile.currentClass,
+    dob: profile.dob,
+    educationalBoard: profile.educationalBoard,
+    state: profile.state,
+    interests: profile.interests,
+  });
 
-  return opportunities
-    .map((opportunity) => {
-      const result = evaluateEligibility(opportunity, profile);
-      return {
-        ...opportunity,
-        matchScore: result.score,
-        aiMatchReason: result.reason,
-      };
-    })
-    .filter((opportunity) => opportunity.matchScore === undefined || opportunity.matchScore >= 40)
-    .sort((a, b) => (b.matchScore ?? 0) - (a.matchScore ?? 0));
+  return matches.map(({ opportunity, score, reasons, warnings }) => ({
+    ...opportunity,
+    matchScore: score,
+    aiMatchReason: reasons[0] ?? warnings[0] ?? 'Matched to your profile',
+  }));
 }
