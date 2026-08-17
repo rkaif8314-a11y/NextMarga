@@ -9,7 +9,7 @@ import { OnboardingWizard } from './components/OnboardingWizard';
 import { HomeScreen } from './components/HomeScreen';
 import { OpportunityDetailScreen } from './components/OpportunityDetailScreen';
 import { RoadmapScreen } from './components/RoadmapScreen';
-import { CareerAIChatScreen } from './components/CareerAIChatScreen';
+import { OpportunityHub } from './components/OpportunityHub';
 import { ApplicationsScreen } from './components/ApplicationsScreen';
 import { AssessmentScreen } from './components/AssessmentScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
@@ -31,7 +31,7 @@ export function App() {
   const [userEmail, setUserEmail] = useState('');
   const [profile, setProfile] = useState<UserProfile>(() => {
     const cached = localStorage.getItem('nextmarga_profile');
-    if (cached) { try { return JSON.parse(cached); } catch {} }
+    if (cached) { try { return JSON.parse(cached); } catch { } }
     return initialProfile;
   });
   const [opportunities, setOpportunities] = useState<Opportunity[]>(sampleOpportunities);
@@ -237,7 +237,7 @@ export function App() {
       {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => void navigate(scr)} />}
       {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => void navigate('home')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={() => void handleApplyOpportunity(selectedOpportunity.id)} onStartAssessment={() => void navigate('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'explore' && <CareerAIChatScreen profile={profile} onSelectOpportunityById={handleSelectOpportunityById} onNavigate={(scr) => void navigate(scr)} />}
+      {currentScreen === 'explore' && <OpportunityHub />}
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => void navigate(scr)} onStartAssessment={() => void navigate('assessment')} onUpdateStatus={(id, status) => void handleUpdateApplicationStatus(id, status)} />}
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => void navigate('applications')} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
