@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { ArrowLeft, Camera, Check, Plus, X, Sparkles } from 'lucide-react';
 import { UserProfile } from '../types';
 import { sampleBoards, sampleClasses } from '../data/mockData';
@@ -20,6 +20,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [newTag, setNewTag] = useState('');
   const [showAddTag, setShowAddTag] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleSave = () => {
     onSave(formData);
@@ -300,3 +301,4 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     </div>
   );
 };
+
