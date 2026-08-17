@@ -18,7 +18,7 @@ import { supabase } from './lib/supabase';
 import { getUserProfile, saveUserProfile } from './lib/profile';
 import { getPersonalizedOpportunities } from './lib/opportunities';
 import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, applyToOpportunity, updateApplicationStatus } from './lib/applications';
-import { getMyNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
+import { getMyNotifications, getDeadlineNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
 import { syncMyRoadmapWithProfile } from './lib/roadmap';
 
 export function App() {
@@ -42,6 +42,10 @@ export function App() {
     try {
       const personalized = await getPersonalizedOpportunities(userProfile);
       setOpportunities(personalized);
+      setNotifications((current) => {
+        const persisted = current.filter((n) => !n.id.startsWith('deadline-'));
+        return [...getDeadlineNotifications(personalized), ...persisted];
+      });
       if (personalized.length > 0) setSelectedOpportunity((current) => personalized.find((o) => o.id === current.id) ?? personalized[0]);
     } catch (error) {
       console.error(error);
@@ -99,8 +103,8 @@ export function App() {
         setProfile(initialProfile);
         setOpportunities(sampleOpportunities);
         setSavedOpportunityIds([]);
-        setNotifications(sampleNotifications);
-        setApplications(sampleApplications);
+        setNotifications([]);
+        setApplications([]);
         localStorage.removeItem('nextmarga_profile');
         setCurrentScreen('landing');
       }
@@ -159,7 +163,7 @@ export function App() {
     try {
       setAppError('');
       if (notif.unread) {
-        await markNotificationRead(notif.id);
+        if (!notif.id.startsWith('deadline-')) await markNotificationRead(notif.id);
         setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, unread: false } : n));
       }
       if (notif.actionScreen === 'detail' && notif.actionId) handleSelectOpportunityById(notif.actionId);
@@ -206,7 +210,7 @@ export function App() {
       {currentScreen === 'landing' && <LandingScreen onNavigate={(scr) => setCurrentScreen(scr)} onStartOnboarding={() => setCurrentScreen('auth')} />}
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
       {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={handleOnboardingComplete} onCancel={() => setCurrentScreen('home')} />}
-      {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => setCurrentScreen(scr)} />}
+      {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} applications={applications} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => setCurrentScreen(scr)} />}
       {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => setCurrentScreen('home')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={() => void handleApplyOpportunity(selectedOpportunity.id)} onStartAssessment={() => setCurrentScreen('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => setCurrentScreen(scr)} />}
       {currentScreen === 'explore' && <CareerAIChatScreen profile={profile} onSelectOpportunityById={handleSelectOpportunityById} onNavigate={(scr) => setCurrentScreen(scr)} />}
