@@ -1,63 +1,79 @@
--- Starter verified opportunity catalog for NextMarga.
--- These are official portals/schemes, not scraped third-party listings.
--- Run after schema.sql in Supabase SQL Editor.
+-- NextMarga starter opportunity catalog
+-- IMPORTANT: Run only the SQL below in Supabase SQL Editor.
+-- This script is safe to run repeatedly.
 
-insert into public.opportunities
-  (title, organization, category, is_verified, is_govt, deadline, fee, mode, eligibility, description, why_consider, required_docs, official_url, minimum_class, maximum_class, minimum_age, maximum_age, states, boards, interests)
-values
+DELETE FROM public.opportunities
+WHERE title IN (
+  'INSPIRE Awards – MANAK',
+  'National Scholarship Portal',
+  'AICTE Internship Portal',
+  'National Career Service',
+  'INSPIRE Scholarship for Higher Education'
+);
+
+INSERT INTO public.opportunities (
+  title, organization, category, is_verified, is_govt,
+  deadline, fee, mode, eligibility, description, why_consider,
+  required_docs, official_url, minimum_class, maximum_class,
+  minimum_age, maximum_age, states, boards, interests
+) VALUES
 (
   'INSPIRE Awards – MANAK',
-  'Department of Science & Technology / National Innovation Foundation',
-  'competition', true, true, null, 'Free', 'School nomination',
-  'Students in the school-age range covered by the scheme; nominations are submitted by participating schools.',
-  'A national innovation programme that encourages school students to submit original science and technology ideas addressing societal needs.',
-  'Strong early-stage innovation opportunity with a pathway from school-level selection to exhibitions and national recognition.',
-  array['Student profile details','School nomination','Original idea description'],
-  'https://inspireawards-dst.gov.in/',
-  '6', '12', 10, 15, '{}', '{}', array['science','innovation','technology','entrepreneurship']
+  'Department of Science & Technology, Government of India',
+  'competition', true, true,
+  NULL, 'Free', 'Online through school',
+  'Students in Classes 6–12; school nomination is required.',
+  'A national innovation programme encouraging original science and socially useful ideas from school students.',
+  'Excellent early-stage opportunity for students interested in science, innovation and problem solving.',
+  ARRAY['Student details', 'Original idea/innovation details'],
+  'https://www.inspireawards-dst.gov.in/',
+  '6', '12', NULL, NULL, ARRAY[]::text[], ARRAY[]::text[], ARRAY['Science','Innovation','Technology']
 ),
 (
   'National Scholarship Portal',
   'Government of India',
-  'scholarship', true, true, null, 'Varies by scheme', 'Online',
-  'Eligibility varies by scholarship; students should check the individual scheme rules on the official portal.',
-  'Central platform for discovering and applying for multiple government scholarship schemes.',
-  'Useful as a single starting point for students looking for government scholarships and scheme-specific eligibility.',
-  array['Student identity details','Bank details where required','Scheme-specific certificates'],
+  'scholarship', true, true,
+  NULL, 'Free', 'Online',
+  'Eligibility varies by scholarship, class/course, income, category and other scheme conditions.',
+  'Government scholarship discovery and application portal covering multiple central and other scholarship schemes.',
+  'Useful single starting point for finding scholarships relevant to a student profile.',
+  ARRAY['Academic records', 'Identity documents', 'Bank details where required'],
   'https://scholarships.gov.in/',
-  '6', null, null, null, '{}', '{}', array['scholarship','education','financial aid']
+  '6', NULL, NULL, NULL, ARRAY[]::text[], ARRAY[]::text[], ARRAY['Scholarship','Education']
 ),
 (
   'AICTE Internship Portal',
   'All India Council for Technical Education',
-  'internship', true, true, null, 'Free', 'Online / As listed',
-  'Eligibility depends on the individual internship listing and student profile.',
-  'Official AICTE platform listing internships and work-based learning opportunities for students and fresh engineers.',
-  'A direct government-backed source for internship discovery without relying on unofficial aggregators.',
-  array['Student registration','Institute/student details','Internship-specific documents'],
+  'internship', true, true,
+  NULL, 'Varies', 'Online',
+  'Primarily for eligible higher-education students; individual internship requirements apply.',
+  'Official internship platform providing internship opportunities and application information for students.',
+  'A direct government-supported route to discover internships and build practical experience.',
+  ARRAY['Student profile', 'Resume where required'],
   'https://internship.aicte-india.org/',
-  null, null, null, null, '{}', '{}', array['internship','engineering','technology','data science','ai','web development']
+  'College', NULL, NULL, NULL, ARRAY[]::text[], ARRAY[]::text[], ARRAY['Technology','Engineering','Internship']
 ),
 (
   'National Career Service',
   'Ministry of Labour & Employment, Government of India',
-  'job', true, true, null, 'Free', 'Online',
-  'Job eligibility varies by vacancy; users must verify qualification, age and employer details on the official listing.',
-  'Government career platform providing job search and career-related services across India.',
-  'Useful for older students and graduates moving from education into employment and career discovery.',
-  array['Profile information','Education details','Job-specific documents'],
+  'job', true, true,
+  NULL, 'Free', 'Online',
+  'Eligibility varies by job, employer and qualification.',
+  'Government career and employment service providing job search, career information and related services.',
+  'Useful for career exploration and eligible job opportunities from an official government platform.',
+  ARRAY['Profile information', 'Qualification details'],
   'https://www.ncs.gov.in/',
-  '12', null, 18, null, '{}', '{}', array['jobs','career','employment','skills']
+  '12', NULL, NULL, NULL, ARRAY[]::text[], ARRAY[]::text[], ARRAY['Career','Jobs','Skills']
 ),
 (
   'INSPIRE Scholarship for Higher Education',
   'Department of Science & Technology, Government of India',
-  'scholarship', true, true, null, 'Free', 'Online',
-  'Eligibility and application windows are scheme-specific; applicants should verify the current cycle on the official INSPIRE portal.',
-  'A government scholarship pathway for students pursuing higher education in science-related fields.',
-  'Helps students connect school achievement and science-focused higher education with a government scholarship pathway.',
-  array['Academic records','Identity documents','Institution/course details','Scheme-specific certificates'],
+  'scholarship', true, true,
+  NULL, 'Free', 'Online',
+  'For eligible students pursuing higher education in basic and natural sciences; scheme-specific conditions apply.',
+  'Scholarship support under the INSPIRE programme for students pursuing eligible science education.',
+  'Can provide financial support for students continuing a science-focused higher-education pathway.',
+  ARRAY['Academic records', 'Admission/enrolment proof', 'Identity documents where required'],
   'https://online-inspire.gov.in/',
-  '12', null, null, null, '{}', '{}', array['science','higher education','scholarship','research']
-)
-on conflict do nothing;
+  'College', NULL, NULL, NULL, ARRAY[]::text[], ARRAY[]::text[], ARRAY['Science','Scholarship','Research']
+);
