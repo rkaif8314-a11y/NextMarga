@@ -46,7 +46,7 @@ export function App() {
   const loadOpportunities = useCallback(async (userProfile: UserProfile) => {
     setOpportunitiesLoading(true);
     try {
-      const personalized = await getPersonalizedOpportunities(userProfile, 250);
+      const personalized = await getPersonalizedOpportunities(userProfile, 1000);
       setOpportunities(personalized);
       setNotifications((current) => [...getDeadlineNotifications(personalized), ...current.filter((n) => !n.id.startsWith('deadline-'))]);
       if (personalized.length > 0) setSelectedOpportunity((current) => personalized.find((o) => o.id === current.id) ?? personalized[0]);
@@ -93,8 +93,13 @@ export function App() {
   };
 
   const handleApplyOpportunity = async (oppId: string) => {
-    try { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); }
-    catch (error) { setAppError(error instanceof Error ? error.message : 'Could not record your application.'); }
+    try {
+      setAppError('');
+      await applyToOpportunity(oppId);
+      setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId));
+      await refreshApplications();
+      setCurrentScreen('applications');
+    } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not record your application.'); }
   };
 
   const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => {
