@@ -11,7 +11,7 @@ interface OpportunityHubProps {
 }
 
 const labels: Record<Opportunity['category'], string> = {
-  competition: 'Competition', scholarship: 'Scholarship', exam: 'Exam', internship: 'Internship', fellowship: 'Fellowship', job: 'Job', other: 'Other',
+  competition: 'Competition', scholarship: 'Scholarship', exam: 'Exam', internship: 'Internship', fellowship: 'Fellowship', job: 'Job', research: 'Research', hackathon: 'Hackathon', program: 'Program', other: 'Other',
 };
 
 type SortMode = 'match' | 'deadline' | 'newest';
@@ -47,11 +47,11 @@ export const OpportunityHub: React.FC<OpportunityHubProps> = ({ opportunities, s
         const bd = b.deadline ? new Date(b.deadline).getTime() : Number.POSITIVE_INFINITY;
         return ad - bd;
       }
-      return 0;
+      return a.title.localeCompare(b.title);
     });
   }, [opportunities, query, category, quickFilter, sortMode, savedOpportunityIds]);
 
-  const categories = ['All', 'scholarship', 'internship', 'competition', 'exam', 'fellowship', 'job', 'other'] as const;
+  const categories: ('All' | Opportunity['category'])[] = ['All', 'scholarship', 'internship', 'fellowship', 'research', 'hackathon', 'competition', 'exam', 'job', 'program', 'other'];
   const quickFilters: { id: QuickFilter; label: string }[] = [
     { id: 'all', label: 'All opportunities' },
     { id: 'closing', label: 'Closing in 14 days' },
@@ -74,7 +74,7 @@ export const OpportunityHub: React.FC<OpportunityHubProps> = ({ opportunities, s
         <div className="flex flex-col lg:flex-row gap-3">
           <div className="flex-1 relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/35" /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search opportunities, organizations, countries, skills..." className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white outline-none focus:border-white/30" /></div>
           <button onClick={() => setShowFilters((v) => !v)} className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs uppercase tracking-wider border ${showFilters ? 'bg-[#F5F2ED] text-black border-[#F5F2ED]' : 'bg-white/5 text-white/60 border-white/10 hover:text-white'}`}><SlidersHorizontal className="w-4 h-4" />Advanced filters</button>
-          <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none"><option value="match">Best match</option><option value="deadline">Deadline soonest</option><option value="newest">Default order</option></select>
+          <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)} className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs text-white outline-none"><option value="match">Best match</option><option value="deadline">Deadline soonest</option><option value="newest">A–Z</option></select>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1"><Filter className="w-4 h-4 text-white/40 flex-shrink-0" />{categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`whitespace-nowrap px-3 py-2 rounded-lg text-[11px] uppercase tracking-wider transition-all ${category === item ? 'bg-[#F5F2ED] text-black' : 'bg-white/5 text-white/50 hover:text-white'}`}>{item === 'All' ? 'All' : labels[item]}</button>)}</div>
         {showFilters && <div className="border-t border-white/10 pt-3 flex flex-wrap gap-2">{quickFilters.map((item) => <button key={item.id} onClick={() => setQuickFilter(item.id)} className={`px-3 py-2 rounded-lg text-[11px] uppercase tracking-wider border ${quickFilter === item.id ? 'border-white/40 bg-white/10 text-white' : 'border-white/10 bg-white/5 text-white/50 hover:text-white'}`}>{item.label}</button>)}</div>}
