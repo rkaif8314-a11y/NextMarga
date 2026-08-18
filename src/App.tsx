@@ -7,6 +7,7 @@ import { LandingScreen } from './components/LandingScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { supabase } from './lib/supabase';
+import { signOut } from './lib/auth';
 import { getUserProfile, saveUserProfile } from './lib/profile';
 import { getPersonalizedOpportunities, getOpportunityById } from './lib/opportunities';
 import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, applyToOpportunity, updateApplicationStatus } from './lib/applications';
@@ -109,6 +110,11 @@ export function App() {
   const handleSelectNotification = async (notif: AppNotification) => { try { setAppError(''); if (notif.unread) { if (!notif.id.startsWith('deadline-')) await markNotificationRead(notif.id); setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, unread: false } : n)); } if (notif.actionScreen === 'detail' && notif.actionId) handleSelectOpportunityById(notif.actionId); else if (notif.actionScreen) await navigate(notif.actionScreen as AppScreen); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update notification.'); } };
   const handleProfileSave = async (updated: UserProfile) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } };
   const handleOnboardingComplete = async (updated: UserProfile) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await loadUserData(); await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]); setCurrentScreen('home'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } };
+  const handleSignOut = useCallback(async () => {
+    setAppError('');
+    const { error } = await signOut();
+    if (error) setAppError(error.message);
+  }, []);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
@@ -130,7 +136,7 @@ export function App() {
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => void navigate('applications')} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
       {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
-      {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
+      {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} onSignOut={() => void handleSignOut()} />}
     </Suspense></main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => void navigate(scr)} />}
   </div>;
