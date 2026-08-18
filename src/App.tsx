@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
 import { initialProfile, sampleOpportunities, sampleNotifications, sampleApplications } from './data/mockData';
 import { TopHeader } from './components/TopHeader';
@@ -119,6 +120,7 @@ export function App() {
   if (authLoading) return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-white/40">NextMarga</div><div className="mt-3 text-sm text-white/60">Preparing your opportunity path...</div></div></div>;
 
   return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex flex-col font-sans selection:bg-white/20 selection:text-white">
+    <SpeedInsights />
     {showTopHeader && <TopHeader profile={profile} userEmail={userEmail} unreadNotificationsCount={unreadCount} onNavigate={(scr) => void navigate(scr)} />}
     {appError && <div className="mx-auto w-full max-w-xl px-5 pt-4"><div className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3 text-xs text-red-200">{appError}</div></div>}
     <main className="flex-1"><Suspense fallback={<ScreenLoader />}>
