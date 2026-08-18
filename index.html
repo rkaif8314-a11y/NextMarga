@@ -36,7 +36,7 @@
       body { margin: 0; background: #0A0A0A; }
       html[data-theme="light"] body { background: #f5f5f2; color: #111; }
       html[data-theme="light"] [class*="bg-[#0A0A0A]"] { background-color: #f5f5f2 !important; }
-      html[data-theme="light"] [class*="bg-[#121212]"] { background-color: #ffffff !important; }
+      html[data-theme="light"] [class*="bg-[#121212]"] { background-color: #fff !important; }
       html[data-theme="light"] [class*="bg-white/5"] { background-color: rgba(0,0,0,.04) !important; }
       html[data-theme="light"] [class*="text-[#F5F2ED]"] { color: #111 !important; }
       html[data-theme="light"] [class*="text-white"] { color: #171717 !important; }
@@ -45,8 +45,15 @@
       html[data-theme="light"] [class*="text-black"] { color: #fff !important; }
       html[data-theme="light"] input, html[data-theme="light"] select, html[data-theme="light"] textarea { color: #111 !important; background: #fff !important; }
       html[data-theme="light"] .font-serif-luxury { color: #111 !important; }
-      @media (prefers-color-scheme: light) { html[data-theme="system"] body { background:#f5f5f2; } }
-      html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+      html[data-accent="blue"] [class*="bg-[#F5F2ED]"] { background-color:#38bdf8 !important; color:#061426 !important; }
+      html[data-accent="violet"] [class*="bg-[#F5F2ED]"] { background-color:#a78bfa !important; color:#170b2d !important; }
+      html[data-accent="emerald"] [class*="bg-[#F5F2ED]"] { background-color:#34d399 !important; color:#05261a !important; }
+      html[data-accent="amber"] [class*="bg-[#F5F2ED]"] { background-color:#fbbf24 !important; color:#271800 !important; }
+      html[data-accent="blue"] [class*="text-[#F5F2ED]"] { color:#38bdf8 !important; }
+      html[data-accent="violet"] [class*="text-[#F5F2ED]"] { color:#a78bfa !important; }
+      html[data-accent="emerald"] [class*="text-[#F5F2ED]"] { color:#34d399 !important; }
+      html[data-accent="amber"] [class*="text-[#F5F2ED]"] { color:#fbbf24 !important; }
+      html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
     </style>
   </head>
   <body>
