@@ -55,7 +55,7 @@ export default async function handler(req: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
+        model: process.env.OPENAI_MODEL || 'gpt-5.6',
         instructions: system,
         input: [...history, { role: 'user', content: body.message || 'What opportunities should I prepare for next?' }],
         max_output_tokens: 900,
