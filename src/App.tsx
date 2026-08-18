@@ -28,13 +28,24 @@ const SettingsScreen = lazy(() => import('./components/SettingsScreen').then((m)
 const protectedScreens: AppScreen[] = ['home', 'detail', 'roadmap', 'explore', 'applications', 'assessment', 'notifications', 'profile', 'settings'];
 const ScreenLoader = () => <div className="min-h-[45vh] flex items-center justify-center"><div className="text-center"><div className="text-[10px] uppercase tracking-[0.3em] text-white/35">NextMarga</div><div className="mt-2 text-xs text-white/45">Loading…</div></div></div>;
 
+function getCachedProfile(userId: string): UserProfile {
+  try {
+    const cached = localStorage.getItem(`nextmarga_profile_${userId}`);
+    if (!cached) return initialProfile;
+    const parsed = JSON.parse(cached);
+    if (parsed && typeof parsed === 'object' && typeof parsed.fullName === 'string') return parsed as UserProfile;
+  } catch {}
+  return initialProfile;
+}
+
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
   const [authLoading, setAuthLoading] = useState(true);
   const [opportunitiesLoading, setOpportunitiesLoading] = useState(false);
   const [appError, setAppError] = useState('');
   const [userEmail, setUserEmail] = useState('');
-  const [profile, setProfile] = useState<UserProfile>(() => { const cached = localStorage.getItem('nextmarga_profile'); if (cached) { try { return JSON.parse(cached); } catch {} } return initialProfile; });
+  const [authUserId, setAuthUserId] = useState('');
+  const [profile, setProfile] = useState<UserProfile>(initialProfile);
   const [opportunities, setOpportunities] = useState<Opportunity[]>(sampleOpportunities);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity>(sampleOpportunities[0]);
   const [savedOpportunityIds, setSavedOpportunityIds] = useState<string[]>([]);
@@ -69,8 +80,10 @@ export function App() {
     setAppError('');
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setUserEmail(''); setCurrentScreen('landing'); return; }
+      if (!user) { setAuthUserId(''); setUserEmail(''); setCurrentScreen('landing'); return; }
+      setAuthUserId(user.id);
       setUserEmail(user.email ?? '');
+      setProfile(getCachedProfile(user.id));
       const remoteProfile = await getUserProfile();
       await loadUserData();
       if (remoteProfile && remoteProfile.fullName.trim()) { setProfile(remoteProfile); setCurrentScreen('home'); await loadOpportunities(remoteProfile); }
@@ -95,11 +108,15 @@ export function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === 'SIGNED_IN' && session?.user) window.setTimeout(() => { if (active) void loadAuthenticatedUser(); }, 0);
-      else if (event === 'SIGNED_OUT') { setUserEmail(''); setProfile(initialProfile); setOpportunities(sampleOpportunities); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing'); }
+      else if (event === 'SIGNED_OUT') { setAuthUserId(''); setUserEmail(''); setProfile(initialProfile); setOpportunities(sampleOpportunities); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing'); }
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, [loadAuthenticatedUser]);
-  useEffect(() => { localStorage.setItem('nextmarga_profile', JSON.stringify(profile)); }, [profile]);
+
+  useEffect(() => {
+    if (!authUserId) return;
+    try { localStorage.setItem(`nextmarga_profile_${authUserId}`, JSON.stringify(profile)); } catch {}
+  }, [profile, authUserId]);
 
   const handleToggleSaveOpportunity = async (oppId: string) => { try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); } };
   const handleApplyOpportunity = async (oppId: string) => { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); };
