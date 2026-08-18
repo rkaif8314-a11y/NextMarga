@@ -9,7 +9,7 @@
     <meta name="author" content="NextMarga" />
     <meta name="application-name" content="NextMarga" />
     <meta name="theme-color" content="#0A0A0A" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <link rel="canonical" href="https://next-marga.vercel.app/" />
     <link rel="icon" href="/nextmarga-mark.svg" type="image/svg+xml" />
@@ -27,12 +27,27 @@
     <meta name="twitter:title" content="NextMarga — Discover What Comes Next" />
     <meta name="twitter:description" content="A personalized global opportunity platform for students and early-career talent." />
     <meta name="twitter:image" content="/nextmarga-mark.svg" />
-    <script type="application/ld+json">
-      {"@context":"https://schema.org","@type":"WebApplication","name":"NextMarga","url":"https://next-marga.vercel.app/","description":"A personalized global platform to discover scholarships, internships, competitions, exams, fellowships and career opportunities.","applicationCategory":"EducationalApplication","operatingSystem":"Web","inLanguage":"en","isAccessibleForFree":true,"publisher":{"@type":"Organization","name":"NextMarga"}}
-    </script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"NextMarga","url":"https://next-marga.vercel.app/","description":"A personalized global platform to discover scholarships, internships, competitions, exams, fellowships and career opportunities.","applicationCategory":"EducationalApplication","operatingSystem":"Web","inLanguage":"en","isAccessibleForFree":true,"publisher":{"@type":"Organization","name":"NextMarga"}}</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      html, body, #root { min-height: 100%; }
+      body { margin: 0; background: #0A0A0A; }
+      html[data-theme="light"] body { background: #f5f5f2; color: #111; }
+      html[data-theme="light"] [class*="bg-[#0A0A0A]"] { background-color: #f5f5f2 !important; }
+      html[data-theme="light"] [class*="bg-[#121212]"] { background-color: #ffffff !important; }
+      html[data-theme="light"] [class*="bg-white/5"] { background-color: rgba(0,0,0,.04) !important; }
+      html[data-theme="light"] [class*="text-[#F5F2ED]"] { color: #111 !important; }
+      html[data-theme="light"] [class*="text-white"] { color: #171717 !important; }
+      html[data-theme="light"] [class*="border-white"] { border-color: rgba(0,0,0,.12) !important; }
+      html[data-theme="light"] [class*="bg-[#F5F2ED]"] { background-color: #111 !important; color: #fff !important; }
+      html[data-theme="light"] [class*="text-black"] { color: #fff !important; }
+      html[data-theme="light"] input, html[data-theme="light"] select, html[data-theme="light"] textarea { color: #111 !important; background: #fff !important; }
+      html[data-theme="light"] .font-serif-luxury { color: #111 !important; }
+      @media (prefers-color-scheme: light) { html[data-theme="system"] body { background:#f5f5f2; } }
+      html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
