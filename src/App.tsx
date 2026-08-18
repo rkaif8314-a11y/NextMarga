@@ -14,6 +14,7 @@ import { ApplicationsScreen } from './components/ApplicationsScreen';
 import { AssessmentScreen } from './components/AssessmentScreen';
 import { NotificationsScreen } from './components/NotificationsScreen';
 import { ProfileScreen } from './components/ProfileScreen';
+import { SettingsScreen } from './components/SettingsScreen';
 import { supabase } from './lib/supabase';
 import { getUserProfile, saveUserProfile } from './lib/profile';
 import { getPersonalizedOpportunities, getOpportunityById } from './lib/opportunities';
@@ -21,7 +22,7 @@ import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, appl
 import { getMyNotifications, getDeadlineNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
 import { syncMyRoadmapWithProfile } from './lib/roadmap';
 
-const protectedScreens: AppScreen[] = ['home', 'detail', 'roadmap', 'explore', 'applications', 'assessment', 'notifications', 'profile'];
+const protectedScreens: AppScreen[] = ['home', 'detail', 'roadmap', 'explore', 'applications', 'assessment', 'notifications', 'profile', 'settings'];
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<AppScreen>('landing');
@@ -58,7 +59,6 @@ export function App() {
     const [savedIds, myApplications, myNotifications] = await Promise.all([getSavedOpportunityIds(), getMyApplications(), getMyNotifications()]);
     setSavedOpportunityIds(savedIds); setApplications(myApplications); setNotifications(myNotifications);
   }, []);
-
   const refreshApplications = useCallback(async () => { setApplications(await getMyApplications()); }, []);
 
   const loadAuthenticatedUser = useCallback(async () => {
@@ -84,52 +84,22 @@ export function App() {
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, [loadAuthenticatedUser]);
-
   useEffect(() => { localStorage.setItem('nextmarga_profile', JSON.stringify(profile)); }, [profile]);
 
-  const handleToggleSaveOpportunity = async (oppId: string) => {
-    try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); }
-    catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); }
-  };
-
-  const handleApplyOpportunity = async (oppId: string) => {
-    try {
-      setAppError('');
-      await applyToOpportunity(oppId);
-      setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId));
-      await refreshApplications();
-      setCurrentScreen('applications');
-    } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not record your application.'); }
-  };
-
-  const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => {
-    try { setAppError(''); await updateApplicationStatus(id, status); await loadUserData(); }
-    catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update application.'); }
-  };
-
+  const handleToggleSaveOpportunity = async (oppId: string) => { try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); } };
+  const handleApplyOpportunity = async (oppId: string) => { try { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not record your application.'); } };
+  const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => { try { setAppError(''); await updateApplicationStatus(id, status); await loadUserData(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update application.'); } };
   const handleSelectOpportunity = (opp: Opportunity) => { setSelectedOpportunity(opp); setCurrentScreen('detail'); };
   const handleSelectOpportunityById = (id: string) => { const match = opportunities.find((o) => o.id === id); if (match) { setSelectedOpportunity(match); setCurrentScreen('detail'); } };
-  const handleInspectApplication = async (opportunityId?: string) => {
-    if (!opportunityId) { setCurrentScreen('explore'); return; }
-    try {
-      const localMatch = opportunities.find((o) => o.id === opportunityId);
-      if (localMatch) { setSelectedOpportunity(localMatch); setCurrentScreen('detail'); return; }
-      const remote = await getOpportunityById(opportunityId);
-      if (remote) { setSelectedOpportunity(remote); setCurrentScreen('detail'); return; }
-      setCurrentScreen('explore');
-    } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not open this opportunity dossier.'); }
-  };
-
+  const handleInspectApplication = async (opportunityId?: string) => { if (!opportunityId) { setCurrentScreen('explore'); return; } try { const localMatch = opportunities.find((o) => o.id === opportunityId); if (localMatch) { setSelectedOpportunity(localMatch); setCurrentScreen('detail'); return; } const remote = await getOpportunityById(opportunityId); if (remote) { setSelectedOpportunity(remote); setCurrentScreen('detail'); return; } setCurrentScreen('explore'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not open this opportunity dossier.'); } };
   const handleMarkAllNotificationsRead = async () => { try { setAppError(''); await markAllNotificationsRead(); setNotifications((prev) => prev.map((n) => ({ ...n, unread: false }))); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not mark notifications as read.'); } };
   const handleSelectNotification = async (notif: AppNotification) => { try { setAppError(''); if (notif.unread) { if (!notif.id.startsWith('deadline-')) await markNotificationRead(notif.id); setNotifications((prev) => prev.map((n) => n.id === notif.id ? { ...n, unread: false } : n)); } if (notif.actionScreen === 'detail' && notif.actionId) handleSelectOpportunityById(notif.actionId); else if (notif.actionScreen) await navigate(notif.actionScreen as AppScreen); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update notification.'); } };
-
   const handleProfileSave = async (updated: UserProfile) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } };
   const handleOnboardingComplete = async (updated: UserProfile) => { try { setAppError(''); await saveUserProfile(updated); setProfile(updated); await loadUserData(); await Promise.all([loadOpportunities(updated), syncMyRoadmapWithProfile(updated)]); setCurrentScreen('home'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not save your profile.'); } };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
-
   if (authLoading) return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-white/40">NextMarga</div><div className="mt-3 text-sm text-white/60">Preparing your opportunity path...</div></div></div>;
 
   return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex flex-col font-sans selection:bg-white/20 selection:text-white">
@@ -147,6 +117,7 @@ export function App() {
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => void navigate('applications')} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
       {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
+      {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
     </main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => void navigate(scr)} />}
   </div>;
