@@ -41,17 +41,19 @@ export async function getMyApplications(): Promise<ApplicationItem[]> {
   if (error) throw new Error(error.message);
   return (data ?? []).map((row: any) => {
     const opportunity = Array.isArray(row.opportunities) ? row.opportunities[0] : row.opportunities;
+    const status = row.status as ApplicationItem['status'];
+    const completed = status === 'Accepted' || status === 'Rejected';
     return {
       id: row.id,
       opportunityId: row.opportunity_id ?? undefined,
       title: opportunity?.title ?? 'Opportunity',
       organization: opportunity?.organization ?? '',
       location: 'Online',
-      status: row.status,
-      badgeColor: row.status === 'Accepted' ? 'green' : row.status === 'Applied' ? 'blue' : 'gray',
+      status,
+      badgeColor: status === 'Accepted' ? 'green' : status === 'Rejected' ? 'red' : status === 'Applied' ? 'blue' : 'gray',
       letter: (opportunity?.organization ?? 'O').slice(0, 1).toUpperCase(),
       appliedDate: row.applied_date ?? row.created_at,
-      category: row.status === 'Saved' ? 'saved' : row.status === 'Accepted' ? 'completed' : 'active',
+      category: status === 'Saved' ? 'saved' : completed ? 'completed' : 'active',
     } as ApplicationItem;
   });
 }
