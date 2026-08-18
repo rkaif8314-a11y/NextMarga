@@ -75,6 +75,17 @@ export function App() {
   }, [loadOpportunities, loadUserData]);
 
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem('nextmarga_preferences');
+      const prefs = raw ? JSON.parse(raw) : {};
+      document.documentElement.dataset.theme = prefs.theme || 'dark';
+      document.documentElement.dataset.accent = prefs.accent || 'ivory';
+      document.documentElement.dataset.compact = String(Boolean(prefs.compactMode));
+      document.documentElement.dataset.reducedMotion = String(Boolean(prefs.reducedMotion));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(async ({ data: { session } }) => { if (!active) return; if (session?.user) await loadAuthenticatedUser(); if (active) setAuthLoading(false); });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -87,13 +98,7 @@ export function App() {
   useEffect(() => { localStorage.setItem('nextmarga_profile', JSON.stringify(profile)); }, [profile]);
 
   const handleToggleSaveOpportunity = async (oppId: string) => { try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); } };
-  const handleApplyOpportunity = async (oppId: string) => {
-    setAppError('');
-    await applyToOpportunity(oppId);
-    setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId));
-    await refreshApplications();
-    setCurrentScreen('applications');
-  };
+  const handleApplyOpportunity = async (oppId: string) => { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); };
   const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => { try { setAppError(''); await updateApplicationStatus(id, status); await loadUserData(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update application.'); } };
   const handleSelectOpportunity = (opp: Opportunity) => { setSelectedOpportunity(opp); setCurrentScreen('detail'); };
   const handleSelectOpportunityById = (id: string) => { const match = opportunities.find((o) => o.id === id); if (match) { setSelectedOpportunity(match); setCurrentScreen('detail'); } };
