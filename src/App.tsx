@@ -1,4 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
 import { initialProfile, sampleOpportunities, sampleNotifications, sampleApplications } from './data/mockData';
 import { TopHeader } from './components/TopHeader';
@@ -140,6 +141,7 @@ export function App() {
       {currentScreen === 'support' && <LegalScreen page="support" onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
     </Suspense></main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => void navigate(scr)} />}
+    <Analytics />
   </div>;
 }
 
