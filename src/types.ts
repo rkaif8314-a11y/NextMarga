@@ -10,4 +10,4 @@ export interface CareerOutcome { id: string; pathLabel: string; title: string; d
 export interface AppNotification { id: string; type: 'urgent' | 'match' | 'update' | 'milestone'; title: string; message: string; timestamp: string; unread: boolean; actionScreen?: string; actionId?: string; }
 export interface ChatCard { id: string; title: string; eligibility: string; scope: string; opportunityId?: string; }
 export interface ChatMessage { id: string; sender: 'user' | 'ai'; text: string; timestamp: string; cards?: ChatCard[]; }
-export type AppScreen = 'landing' | 'auth' | 'home' | 'explore' | 'roadmap' | 'applications' | 'profile' | 'onboarding' | 'detail' | 'assessment' | 'notifications';
+export type AppScreen = 'landing' | 'auth' | 'home' | 'explore' | 'roadmap' | 'applications' | 'profile' | 'settings' | 'onboarding' | 'detail' | 'assessment' | 'notifications';
