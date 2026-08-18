@@ -10,12 +10,12 @@ export interface OpportunityFilters {
 }
 
 interface OpportunityRow {
-  id: string; title: string; organization: string; category: Opportunity['category']; is_verified: boolean; is_govt: boolean; deadline: string | null; fee: string | null; mode: string | null; eligibility: string | null; description: string | null; why_consider: string | null; required_docs: string[] | null; official_url: string | null; minimum_class: string | null; maximum_class: string | null; minimum_age: number | null; maximum_age: number | null; states: string[] | null; boards: string[] | null; interests: string[] | null; countries?: string[] | null; regions?: string[] | null; opportunity_status?: 'active' | 'closed' | 'upcoming' | 'archived' | 'rolling' | 'seasonal'; status?: 'active' | 'closed' | 'upcoming' | 'archived';
+  id: string; title: string; organization: string; category: Opportunity['category']; is_verified: boolean; is_govt: boolean; deadline: string | null; fee: string | null; mode: string | null; eligibility: string | null; description: string | null; why_consider: string | null; required_docs: string[] | null; official_url: string | null; minimum_class: string | null; maximum_class: string | null; minimum_age: number | null; maximum_age: number | null; states: string[] | null; boards: string[] | null; interests: string[] | null; countries?: string[] | null; regions?: string[] | null; opportunity_status?: 'active' | 'closed' | 'upcoming' | 'archived' | 'rolling' | 'seasonal';
 }
 
 type MatchableOpportunity = Opportunity & { minimumClass?: string | null; maximumClass?: string | null; minimumAge?: number | null; maximumAge?: number | null; states?: string[] | null; boards?: string[] | null; interests?: string[] | null; countries?: string[]; regions?: string[]; };
 
-const opportunitySelect = 'id,title,organization,category,is_verified,is_govt,deadline,fee,mode,eligibility,description,why_consider,required_docs,official_url,minimum_class,maximum_class,minimum_age,maximum_age,states,boards,interests,countries,regions,opportunity_status,status';
+const opportunitySelect = 'id,title,organization,category,is_verified,is_govt,deadline,fee,mode,eligibility,description,why_consider,required_docs,official_url,minimum_class,maximum_class,minimum_age,maximum_age,states,boards,interests,countries,regions,opportunity_status';
 
 function formatDeadline(deadline: string | null) {
   if (!deadline) return { display: 'No deadline listed', remaining: '' };
@@ -52,7 +52,7 @@ function mapOpportunity(row: OpportunityRow): MatchableOpportunity {
 }
 
 export async function getVerifiedOpportunities(limit = 250, filters: OpportunityFilters = {}): Promise<MatchableOpportunity[]> {
-  let query = supabase.from('opportunities').select(opportunitySelect).eq('is_verified', true).in('status', ['active', 'upcoming', 'rolling', 'seasonal']);
+  let query = supabase.from('opportunities').select(opportunitySelect).eq('is_verified', true).in('opportunity_status', ['active', 'upcoming', 'rolling', 'seasonal']);
   if (filters.category && filters.category !== 'all') query = query.eq('category', filters.category);
   if (filters.country) query = query.contains('countries', [filters.country]);
   if (filters.region) query = query.contains('regions', [filters.region]);
@@ -68,7 +68,7 @@ export async function getVerifiedOpportunities(limit = 250, filters: Opportunity
 }
 
 export async function getOpportunityById(id: string): Promise<Opportunity | null> {
-  const { data, error } = await supabase.from('opportunities').select(opportunitySelect).eq('id', id).eq('is_verified', true).in('status', ['active', 'upcoming', 'rolling', 'seasonal']).maybeSingle();
+  const { data, error } = await supabase.from('opportunities').select(opportunitySelect).eq('id', id).eq('is_verified', true).in('opportunity_status', ['active', 'upcoming', 'rolling', 'seasonal']).maybeSingle();
   if (error) throw new Error(error.message);
   return data ? mapOpportunity(data as OpportunityRow) : null;
 }
