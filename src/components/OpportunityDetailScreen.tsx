@@ -20,11 +20,12 @@ export const OpportunityDetailScreen: React.FC<OpportunityDetailScreenProps> = (
   const handleApply = async () => {
     if (!opportunity.officialUrl || !onApply || applying) return;
     setApplying(true);
+    const portal = window.open(opportunity.officialUrl, '_blank', 'noopener,noreferrer');
     try {
       await onApply();
-      window.open(opportunity.officialUrl, '_blank', 'noopener,noreferrer');
+      if (!portal) alert('Your browser blocked the official portal popup. Please allow popups for NextMarga. Your application was still recorded.');
     } catch {
-      // App-level error banner handles the failure; keep the dossier open.
+      if (portal) portal.close();
     } finally {
       setApplying(false);
     }
