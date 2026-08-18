@@ -42,11 +42,39 @@ create table if not exists public.applications (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade,
   opportunity_id uuid references public.opportunities(id) on delete cascade,
   status text not null default 'Saved' check (status in ('Under Review','Interview Scheduled','Applied','Saved','Accepted','Rejected')),
-  applied_date timestamptz, notes text, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(user_id, opportunity_id)
+  applied_date timestamptz, notes text, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), unique(user_id, opportunity_id),
+  deadline_snapshot timestamptz, submitted_at timestamptz, archived_at timestamptz, is_archived boolean not null default false,
+  interview_location text, interview_notes text, checklist jsonb not null default '[]'::jsonb
 );
 alter table public.applications drop constraint if exists applications_status_check;
 alter table public.applications add constraint applications_status_check check (status in ('Under Review','Interview Scheduled','Applied','Saved','Accepted','Rejected'));
 create index if not exists applications_user_idx on public.applications(user_id);
+
+create table if not exists public.application_status_history (
+  id uuid primary key default gen_random_uuid(), application_id uuid not null references public.applications(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade, from_status text, to_status text not null, note text,
+  created_at timestamptz not null default now()
+);
+create index if not exists application_status_history_app_idx on public.application_status_history(application_id, created_at desc);
+create index if not exists application_status_history_user_idx on public.application_status_history(user_id, created_at desc);
+
+create table if not exists public.application_documents (
+  id uuid primary key default gen_random_uuid(), application_id uuid not null references public.applications(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade, name text not null, document_type text, storage_path text, file_url text,
+  required boolean not null default false, uploaded boolean not null default false, notes text,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create index if not exists application_documents_app_idx on public.application_documents(application_id);
+create index if not exists application_documents_user_idx on public.application_documents(user_id);
+
+create table if not exists public.application_tasks (
+  id uuid primary key default gen_random_uuid(), application_id uuid not null references public.applications(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade, title text not null, description text, due_at timestamptz,
+  completed boolean not null default false, completed_at timestamptz, priority text not null default 'normal' check (priority in ('low','normal','high','urgent')),
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now()
+);
+create index if not exists application_tasks_app_idx on public.application_tasks(application_id, due_at);
+create index if not exists application_tasks_user_idx on public.application_tasks(user_id, completed, due_at);
 
 create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade,
@@ -78,6 +106,9 @@ alter table public.profiles enable row level security;
 alter table public.schools enable row level security;
 alter table public.opportunities enable row level security;
 alter table public.applications enable row level security;
+alter table public.application_status_history enable row level security;
+alter table public.application_documents enable row level security;
+alter table public.application_tasks enable row level security;
 alter table public.notifications enable row level security;
 alter table public.roadmap_phases enable row level security;
 alter table public.roadmap_goals enable row level security;
@@ -92,6 +123,12 @@ drop policy if exists "Anyone can read verified opportunities" on public.opportu
 create policy "Anyone can read verified opportunities" on public.opportunities for select using (is_verified = true);
 drop policy if exists "Users manage own applications" on public.applications;
 create policy "Users manage own applications" on public.applications for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users manage own application status history" on public.application_status_history;
+create policy "Users manage own application status history" on public.application_status_history for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users manage own application documents" on public.application_documents;
+create policy "Users manage own application documents" on public.application_documents for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "Users manage own application tasks" on public.application_tasks;
+create policy "Users manage own application tasks" on public.application_tasks for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Users read own notifications" on public.notifications;
 create policy "Users read own notifications" on public.notifications for select using (auth.uid() = user_id);
 drop policy if exists "Users update own notifications" on public.notifications;
@@ -100,3 +137,19 @@ drop policy if exists "Users manage own roadmap phases" on public.roadmap_phases
 create policy "Users manage own roadmap phases" on public.roadmap_phases for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Users manage own roadmap goals" on public.roadmap_goals;
 create policy "Users manage own roadmap goals" on public.roadmap_goals for all using (auth.uid() = (select user_id from public.roadmap_phases where id = phase_id)) with check (auth.uid() = (select user_id from public.roadmap_phases where id = phase_id));
+
+create or replace function public.record_application_status_change()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    insert into public.application_status_history(application_id,user_id,from_status,to_status,note) values (new.id,new.user_id,null,new.status,'Application created');
+    return new;
+  end if;
+  if new.status is distinct from old.status then
+    insert into public.application_status_history(application_id,user_id,from_status,to_status) values (new.id,new.user_id,old.status,new.status);
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists applications_status_history_trigger on public.applications;
+create trigger applications_status_history_trigger after insert or update of status on public.applications for each row execute function public.record_application_status_change();
