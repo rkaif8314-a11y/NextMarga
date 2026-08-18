@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { ArrowLeft, Camera, Check, Plus, X, Sparkles, Upload, Link as LinkIcon, Pencil, XCircle } from 'lucide-react';
 import { UserProfile } from '../types';
 import { sampleBoards, sampleClasses } from '../data/mockData';
+import { supabase } from '../lib/supabase';
 
 interface ProfileScreenProps {
   profile: UserProfile;
@@ -10,12 +11,16 @@ interface ProfileScreenProps {
   onStartOnboarding: () => void;
 }
 
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ profile, onBack, onSave, onStartOnboarding }) => {
   const [formData, setFormData] = useState<UserProfile>({ ...profile });
   const [newTag, setNewTag] = useState('');
   const [showAddTag, setShowAddTag] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startEditing = () => {
@@ -30,24 +35,48 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ profile, onBack, o
     setIsEditing(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     onSave(formData);
     setIsEditing(false);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2500);
   };
 
-  const handleUploadPhoto = (file?: File) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    if (file.size > 6 * 1024 * 1024) {
-      alert('Please choose an image smaller than 6 MB.');
+  const handleUploadPhoto = async (file?: File) => {
+    if (!file) return;
+    if (!ALLOWED_TYPES.has(file.type)) {
+      alert('Please choose a JPG, PNG, or WebP image.');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') setFormData((prev) => ({ ...prev, avatarUrl: reader.result as string }));
-    };
-    reader.readAsDataURL(file);
+    if (file.size > MAX_PHOTO_BYTES) {
+      alert('Please choose an image smaller than 5 MB.');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Please sign in again before uploading a profile photo.');
+
+      const extension = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+      const path = `${user.id}/avatar.${extension}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, {
+        upsert: true,
+        contentType: file.type,
+        cacheControl: '3600',
+      });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+      const avatarUrl = `${data.publicUrl}?v=${Date.now()}`;
+      setFormData((prev) => ({ ...prev, avatarUrl }));
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      alert(error instanceof Error ? error.message : 'Unable to upload profile photo.');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const handleImageUrl = () => {
@@ -79,7 +108,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ profile, onBack, o
           {!isEditing ? (
             <button onClick={startEditing} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] font-medium bg-[#F5F2ED] text-black hover:bg-white px-4 py-2 rounded-lg transition-all shadow-sm"><Pencil className="w-3.5 h-3.5" />Edit</button>
           ) : (
-            <><button onClick={cancelEditing} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] font-medium bg-white/5 text-white border border-white/15 hover:bg-white/10 px-3 py-2 rounded-lg"><XCircle className="w-3.5 h-3.5" />Cancel</button><button onClick={handleSave} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] font-medium bg-[#F5F2ED] text-black hover:bg-white px-4 py-2 rounded-lg"><Check className="w-3.5 h-3.5" />Save</button></>
+            <><button onClick={cancelEditing} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] font-medium bg-white/5 text-white border border-white/15 hover:bg-white/10 px-3 py-2 rounded-lg"><XCircle className="w-3.5 h-3.5" />Cancel</button><button onClick={handleSave} disabled={uploadingPhoto} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] font-medium bg-[#F5F2ED] text-black hover:bg-white px-4 py-2 rounded-lg disabled:opacity-50"><Check className="w-3.5 h-3.5" />Save</button></>
           )}
         </div>
       </div>
@@ -89,10 +118,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ profile, onBack, o
       <div className="flex flex-col items-center justify-center space-y-3 py-3">
         <div className="relative">
           <img src={formData.avatarUrl} alt={formData.fullName} className="w-24 h-24 rounded-full object-cover border-2 border-white/20 shadow-lg" />
-          {isEditing && <button type="button" onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-2 bg-[#F5F2ED] text-black rounded-full shadow-md hover:bg-white transition-transform active:scale-95" title="Upload photo"><Camera className="w-3.5 h-3.5" /></button>}
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleUploadPhoto(e.target.files?.[0])} />
+          {isEditing && <button type="button" disabled={uploadingPhoto} onClick={() => fileInputRef.current?.click()} className="absolute bottom-0 right-0 p-2 bg-[#F5F2ED] text-black rounded-full shadow-md hover:bg-white transition-transform active:scale-95 disabled:opacity-50" title="Upload photo"><Camera className="w-3.5 h-3.5" /></button>}
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => handleUploadPhoto(e.target.files?.[0])} />
         </div>
-        {isEditing && <div className="flex items-center gap-2"><button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F2ED] text-black rounded-full text-[10px] font-mono uppercase tracking-wider"><Upload className="w-3 h-3" />Upload Photo</button><button onClick={handleImageUrl} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 text-white border border-white/15 rounded-full text-[10px] font-mono uppercase tracking-wider"><LinkIcon className="w-3 h-3" />Image URL</button></div>}
+        {isEditing && <div className="flex items-center gap-2"><button disabled={uploadingPhoto} onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F5F2ED] text-black rounded-full text-[10px] font-mono uppercase tracking-wider disabled:opacity-50">{uploadingPhoto ? <span>Uploading…</span> : <><Upload className="w-3 h-3" />Upload Photo</>}</button><button disabled={uploadingPhoto} onClick={handleImageUrl} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 text-white border border-white/15 rounded-full text-[10px] font-mono uppercase tracking-wider disabled:opacity-50"><LinkIcon className="w-3 h-3" />Image URL</button></div>}
         <div className="text-center space-y-1"><h2 className="font-serif-luxury font-medium text-[#F5F2ED] text-lg">{formData.fullName}</h2><p className="text-xs font-mono text-white/50">{formData.currentClass} Scholar</p><button onClick={onStartOnboarding} className="text-[10px] uppercase tracking-[0.15em] font-mono text-white/70 hover:text-white mt-1 inline-flex items-center gap-1.5 border border-white/10 px-3 py-1 rounded bg-white/5"><Sparkles className="w-3 h-3 text-white/70" />Re-run Guided Wizard</button></div>
       </div>
 
