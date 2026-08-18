@@ -87,7 +87,13 @@ export function App() {
   useEffect(() => { localStorage.setItem('nextmarga_profile', JSON.stringify(profile)); }, [profile]);
 
   const handleToggleSaveOpportunity = async (oppId: string) => { try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); } };
-  const handleApplyOpportunity = async (oppId: string) => { try { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not record your application.'); } };
+  const handleApplyOpportunity = async (oppId: string) => {
+    setAppError('');
+    await applyToOpportunity(oppId);
+    setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId));
+    await refreshApplications();
+    setCurrentScreen('applications');
+  };
   const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => { try { setAppError(''); await updateApplicationStatus(id, status); await loadUserData(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update application.'); } };
   const handleSelectOpportunity = (opp: Opportunity) => { setSelectedOpportunity(opp); setCurrentScreen('detail'); };
   const handleSelectOpportunityById = (id: string) => { const match = opportunities.find((o) => o.id === id); if (match) { setSelectedOpportunity(match); setCurrentScreen('detail'); } };
@@ -110,7 +116,7 @@ export function App() {
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
       {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={handleOnboardingComplete} onCancel={() => void navigate('home')} />}
       {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => void navigate('explore')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={() => void handleApplyOpportunity(selectedOpportunity.id)} onStartAssessment={() => void navigate('assessment')} />}
+      {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => void navigate('explore')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={handleApplyOpportunity} onStartAssessment={() => void navigate('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => void navigate(scr)} />}
       {currentScreen === 'explore' && <OpportunityHub opportunities={opportunities} savedOpportunityIds={savedOpportunityIds} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} onToggleSave={handleToggleSaveOpportunity} />}
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => void navigate(scr)} onStartAssessment={() => void navigate('assessment')} onUpdateStatus={(id, status) => void handleUpdateApplicationStatus(id, status)} onInspectOpportunity={(id) => void handleInspectApplication(id)} />}
