@@ -5,7 +5,7 @@ import { AppScreen } from '../types';
 export type ThemeMode = 'dark' | 'light' | 'system';
 export type Accent = 'ivory' | 'blue' | 'violet' | 'emerald' | 'amber';
 export interface AppPreferences { theme: ThemeMode; accent: Accent; compactMode: boolean; reducedMotion: boolean; notifications: boolean; }
-const defaults: AppPreferences = { theme: 'dark', accent: 'ivory', compactMode: false, reducedMotion: false, notifications: true };
+const defaults: AppPreferences = { theme: 'light', accent: 'blue', compactMode: false, reducedMotion: false, notifications: true };
 export const getPreferences = (): AppPreferences => { try { return { ...defaults, ...JSON.parse(localStorage.getItem('nextmarga_preferences') || '{}') }; } catch { return defaults; } };
 interface SettingsScreenProps { onBack: () => void; onNavigate: (screen: AppScreen) => void; onPreferencesChange?: (prefs: AppPreferences) => void; onSignOut?: () => void; }
 const accents: { id: Accent; label: string; className: string }[] = [

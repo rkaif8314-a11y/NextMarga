@@ -1,167 +1,104 @@
 import React from 'react';
-import { Menu, ArrowRight, Sparkles } from 'lucide-react';
-import { Logo } from './Logo';
-import { AppScreen } from '../types';
+import { ArrowRight, Bookmark, BriefcaseBusiness, CalendarDays, GraduationCap, Search, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import { AppScreen, Opportunity } from '../types';
+import { OpportunityHub } from './OpportunityHub';
 
 interface LandingScreenProps {
+  opportunities: Opportunity[];
+  savedOpportunityIds: string[];
+  opportunitiesLoading?: boolean;
   onNavigate: (screen: AppScreen) => void;
   onStartOnboarding: () => void;
+  onSelectOpportunity: (opportunity: Opportunity) => void;
+  onToggleSave: (opportunityId: string) => void;
 }
 
-export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate, onStartOnboarding }) => {
-  const pathMilestones = [
-    {
-      id: 'step-1',
-      badge: '01 / Foundation',
-      title: 'Class 6 - 8',
-      description: 'Olympiads & Early Competitions',
-    },
-    {
-      id: 'step-2',
-      badge: '02 / Discovery',
-      title: 'Class 9 - 10',
-      description: 'Scholarships & Board Prep',
-    },
-    {
-      id: 'step-3',
-      badge: '03 / Junction',
-      title: 'Class 11 - 12',
-      description: 'Entrance Exams & College Apps',
-    },
-    {
-      id: 'step-4',
-      badge: '04 / Professional',
-      title: 'Undergraduate',
-      description: 'Internships & Hackathons',
-    },
-    {
-      id: 'step-5',
-      badge: '05 / Destination',
-      title: 'Career & Fellowships',
-      description: 'Research, Grants & Top Positions',
-    },
-  ];
+const navItems: { label: string; screen: AppScreen }[] = [
+  { label: 'Opportunities', screen: 'explore' },
+  { label: 'Roadmap', screen: 'roadmap' },
+  { label: 'Applications', screen: 'applications' },
+  { label: 'CareerAI', screen: 'assessment' },
+  { label: 'About', screen: 'support' },
+];
 
-  return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] pb-24">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-30 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3 sm:px-6">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <Logo size="md" />
-          <button
-            onClick={() => onNavigate('home')}
-            className="p-2 rounded-lg border border-white/10 text-white/80 hover:text-white hover:bg-white/5 transition-colors focus:outline-none focus:ring-1 focus:ring-white/40"
-            title="Menu"
-          >
-            <Menu className="w-5 h-5 stroke-[1.5]" />
-          </button>
+const goals = [
+  { label: 'Scholarships', value: 'Free and funded aid', icon: GraduationCap },
+  { label: 'Internships', value: 'Career starters', icon: BriefcaseBusiness },
+  { label: 'Closing Soon', value: 'Deadlines first', icon: CalendarDays },
+  { label: 'Verified', value: 'Official sources', icon: ShieldCheck },
+];
+
+export const LandingScreen: React.FC<LandingScreenProps> = ({
+  opportunities,
+  savedOpportunityIds,
+  opportunitiesLoading = false,
+  onNavigate,
+  onStartOnboarding,
+  onSelectOpportunity,
+  onToggleSave,
+}) => (
+  <div className="min-h-screen bg-[#F8F7F3] text-[#111827] selection:bg-sky-200 selection:text-slate-950">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <button onClick={() => onNavigate('landing')} className="flex items-center gap-3 text-left" aria-label="NextMarga home">
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-sky-700 text-white shadow-sm"><Sparkles className="h-5 w-5" /></span>
+          <span className="font-display text-xl font-semibold tracking-normal text-slate-950">NextMarga</span>
+        </button>
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
+          {navItems.map((item) => (
+            <button key={item.label} onClick={() => onNavigate(item.screen)} className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${item.screen === 'explore' ? 'bg-sky-50 text-sky-800' : 'text-slate-700 hover:bg-slate-100 hover:text-slate-950'}`}>
+              {item.label}
+            </button>
+          ))}
+        </nav>
+        <div className="flex items-center gap-2">
+          <button onClick={() => onNavigate('explore')} className="hidden h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-sm hover:bg-slate-50 sm:inline-flex"><Search className="h-4 w-4" /> Search</button>
+          <button onClick={() => onNavigate('settings')} className="flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 shadow-sm hover:bg-slate-50" aria-label="Open appearance and settings" title="Theme and settings"><Settings className="h-4 w-4" /></button>
+          <button onClick={onStartOnboarding} className="inline-flex h-10 items-center gap-2 rounded-md bg-sky-700 px-4 text-sm font-semibold text-white shadow-sm hover:bg-sky-800">Sign in</button>
         </div>
-      </header>
+      </div>
+    </header>
 
-      {/* Main Container */}
-      <main className="max-w-xl mx-auto px-5 pt-10">
-        {/* Hero Headline */}
-        <div className="text-center">
-          <span className="text-[11px] uppercase tracking-[0.35em] text-white/40 block mb-4 font-medium">
-            Personalized Academic & Career Trajectory
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-light font-serif-luxury tracking-tight text-[#F5F2ED] leading-[1.05] uppercase">
-            Don't Miss <br />
-            Your Next <br />
-            <span className="italic font-normal">Opportunity.</span>
-          </h1>
-
-          <p className="mt-5 text-white/60 text-sm sm:text-base leading-relaxed font-light px-4 max-w-md mx-auto">
-            One unified, intelligence-driven repository for global competitions, premier fellowships, admissions exams, and bespoke career milestones.
-          </p>
-        </div>
-
-        {/* Hero Actions */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={onStartOnboarding}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-[#F5F2ED] hover:bg-white text-black font-medium text-xs uppercase tracking-[0.15em] transition-all transform active:scale-[0.99] shadow-[0_0_20px_rgba(255,255,255,0.15)]"
-          >
-            <span>Create Opportunity Profile</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => onNavigate('home')}
-            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-white/5 hover:bg-white/10 text-[#F5F2ED] font-medium text-xs uppercase tracking-[0.15em] border border-white/15 transition-all transform active:scale-[0.99]"
-          >
-            <span>Explore Catalog</span>
-          </button>
-        </div>
-
-        {/* Section: Your Path to Success */}
-        <div className="mt-14 mb-8">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-8">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-medium">Curated Milestones</span>
-            <h2 className="text-xs uppercase tracking-[0.2em] font-medium text-[#F5F2ED]">
-              Structured Pathway
-            </h2>
+    <main>
+      <section className="mx-auto max-w-7xl px-4 pb-4 pt-8 sm:px-6 lg:pt-10">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+          <div>
+            <h1 className="max-w-4xl font-display text-4xl font-semibold leading-tight tracking-normal text-slate-950 sm:text-5xl">Find opportunities that are right for you.</h1>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">Search scholarships, internships, exams, fellowships, research programs and competitions from trusted sources. Explore first, then sign in only when you want to save, apply or track progress.</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {goals.map(({ label, value, icon: Icon }) => (
+                <button key={label} onClick={() => onNavigate('explore')} className="flex min-h-20 items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-sky-50 text-sky-700"><Icon className="h-5 w-5" /></span>
+                  <span><span className="block text-sm font-semibold text-slate-950">{label}</span><span className="mt-1 block text-xs text-slate-500">{value}</span></span>
+                </button>
+              ))}
+            </div>
           </div>
-
-          {/* Vertical Stepper / Timeline */}
-          <div className="relative pl-6 space-y-6">
-            {/* Connecting Vertical Line */}
-            <div className="absolute left-[33px] top-6 bottom-8 w-[1px] bg-gradient-to-b from-white/40 via-white/20 to-transparent" />
-
-            {pathMilestones.map((milestone) => (
-              <div key={milestone.id} className="relative flex items-start gap-4 group">
-                {/* Node Ring Indicator */}
-                <div className="relative z-10 flex-shrink-0 mt-3">
-                  <div className="w-5 h-5 rounded-full border border-white/40 bg-[#0A0A0A] flex items-center justify-center ring-4 ring-[#0A0A0A] group-hover:border-white transition-colors">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#F5F2ED]" />
-                  </div>
-                </div>
-
-                {/* Milestone Content Card */}
-                <div
-                  onClick={() => onNavigate('roadmap')}
-                  className="flex-1 bg-[#121212] border border-white/10 rounded-xl p-4 hover:border-white/30 hover:bg-[#161616] transition-all cursor-pointer transform active:scale-[0.99]"
-                >
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 block mb-1 font-mono">
-                    {milestone.badge}
-                  </span>
-
-                  <h3 className="text-base font-serif-luxury font-medium text-[#F5F2ED]">
-                    {milestone.title}
-                  </h3>
-                  <p className="text-xs text-white/60 mt-1 font-light leading-relaxed">
-                    {milestone.description}
-                  </p>
-                </div>
+          <aside className="rounded-lg border border-sky-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-50 text-sky-700"><Bookmark className="h-5 w-5" /></span>
+              <div>
+                <h2 className="text-base font-semibold text-slate-950">Sign in to save and track</h2>
+                <p className="mt-1 text-sm leading-6 text-slate-600">Save opportunities, personalize your roadmap and continue applications from the same place.</p>
               </div>
+            </div>
+            <button onClick={onStartOnboarding} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Start free <ArrowRight className="h-4 w-4" /></button>
+          </aside>
+        </div>
+      </section>
+
+      <OpportunityHub opportunities={opportunities} savedOpportunityIds={savedOpportunityIds} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={onSelectOpportunity} onToggleSave={onToggleSave} compactIntro />
+
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 py-8 text-sm text-slate-600 sm:grid-cols-[1.3fr_2fr] sm:px-6">
+          <div><div className="font-display text-lg font-semibold text-slate-950">NextMarga</div><p className="mt-2 max-w-md leading-6">A calmer way to discover verified education and career opportunities.</p></div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {['Scholarships', 'Exams', 'Internships', 'Fellowships', 'Roadmap', 'CareerAI', 'Help', 'Verification'].map((item) => (
+              <button key={item} onClick={() => onNavigate(item === 'Roadmap' ? 'roadmap' : item === 'CareerAI' ? 'assessment' : item === 'Verification' ? 'legal-verification' : item === 'Help' ? 'support' : 'explore')} className="text-left hover:text-sky-700">{item}</button>
             ))}
           </div>
         </div>
-
-        {/* Quick Launch Banner */}
-        <div className="mt-8 bg-[#121212] border border-white/15 rounded-2xl p-5 text-[#F5F2ED] relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-          <div className="flex items-start gap-3.5 relative z-10">
-            <div className="p-2.5 rounded-lg bg-white/10 border border-white/15">
-              <Sparkles className="w-5 h-5 text-[#F5F2ED]" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 block">AI Advisory</span>
-              <h4 className="font-serif-luxury font-medium text-sm mt-0.5">NextMarga CareerAI Assistant</h4>
-              <p className="text-xs text-white/60 mt-1 leading-relaxed font-light">
-                Receive instant bespoke recommendations tailored to your background, regional eligibility, and academic objectives.
-              </p>
-              <button
-                onClick={() => onNavigate('explore')}
-                className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#F5F2ED] text-black text-[10px] uppercase tracking-[0.15em] font-semibold hover:bg-white transition-colors"
-              >
-                <span>Consult CareerAI</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
+      </footer>
+    </main>
+  </div>
+);
