@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { ArrowRight, BookOpen, BriefcaseBusiness, CheckCircle2, Compass, GraduationCap, Moon, Search, Sparkles, Sun, Target, Users, Zap } from 'lucide-react';
+import React, { useEffect, useMemo, useState, useDeferredValue } from 'react';
+import { ArrowRight, BookOpen, BriefcaseBusiness, CheckCircle2, ChevronRight, Compass, GraduationCap, Moon, Search, Sparkles, Sun, Target, Users, Zap } from 'lucide-react';
 import { Logo } from './Logo';
-import { AppScreen } from '../types';
+import { AppScreen, Opportunity } from '../types';
+import { getVerifiedOpportunities } from '../lib/opportunities';
+import { sampleOpportunities } from '../data/mockData';
 
 interface LandingScreenProps {
   onNavigate: (screen: AppScreen) => void;
@@ -9,32 +11,55 @@ interface LandingScreenProps {
 }
 
 type ThemeMode = 'dark' | 'light';
+type QuickFilter = 'all' | 'scholarship' | 'internship' | 'competition' | 'exam' | 'research' | 'hackathon';
 
-const milestones = [
-  { title: 'School', text: 'Olympiads, scholarships and academic programs', icon: BookOpen },
-  { title: 'Higher Secondary', text: 'Entrance exams, fellowships and admissions', icon: GraduationCap },
-  { title: 'Undergraduate', text: 'Internships, hackathons and research', icon: BriefcaseBusiness },
-  { title: 'Career', text: 'Fellowships, grants and early-career roles', icon: Target },
+const quickFilters: { id: QuickFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'scholarship', label: 'Scholarships' },
+  { id: 'internship', label: 'Internships' },
+  { id: 'competition', label: 'Competitions' },
+  { id: 'exam', label: 'Exams' },
+  { id: 'research', label: 'Research' },
+  { id: 'hackathon', label: 'Hackathons' },
 ];
 
-const featureCards = [
-  { title: 'Personalized discovery', text: 'Opportunities are ranked around your class, interests, board and location.', icon: Sparkles },
-  { title: 'Verified sources', text: 'Keep official links and verification status visible before you apply.', icon: CheckCircle2 },
-  { title: 'One opportunity hub', text: 'Search, filter, save and compare opportunities without jumping between tabs.', icon: Search },
-  { title: 'A path, not a list', text: 'Turn individual opportunities into a roadmap with deadlines and next actions.', icon: Compass },
+const goalCards = [
+  { title: 'Study Abroad', icon: Compass },
+  { title: 'Top Exams', icon: GraduationCap },
+  { title: 'Research & PhD', icon: BookOpen },
+  { title: 'Summer Programs', icon: Sun },
+  { title: 'Build & Compete', icon: Zap },
+  { title: 'Start Your Career', icon: BriefcaseBusiness },
 ];
+
+function categoryLabel(category: Opportunity['category']) {
+  return category.charAt(0).toUpperCase() + category.slice(1);
+}
 
 export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate, onStartOnboarding }) => {
-  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [theme, setTheme] = useState<ThemeMode>('light');
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
+  const [opportunities, setOpportunities] = useState<Opportunity[]>(sampleOpportunities);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem('nextmarga_preferences');
       const prefs = raw ? JSON.parse(raw) : {};
-      const initial = prefs.theme === 'light' ? 'light' : 'dark';
-      setTheme(initial);
-      document.documentElement.dataset.theme = initial;
+      const saved = prefs.theme === 'dark' ? 'dark' : 'light';
+      setTheme(saved);
+      document.documentElement.dataset.theme = saved;
     } catch {}
+
+    let active = true;
+    void getVerifiedOpportunities(250).then((items) => {
+      if (active && items.length) setOpportunities(items);
+    }).catch(() => {}).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
   }, []);
 
   const toggleTheme = () => {
@@ -47,56 +72,100 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ onNavigate, onStar
     } catch {}
   };
 
+  const filtered = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
+    return opportunities.filter((item) => {
+      const categoryMatches = quickFilter === 'all' || item.category === quickFilter;
+      if (!categoryMatches) return false;
+      if (!q) return true;
+      return [item.title, item.organization, item.category, item.description, item.mode, item.eligibility, ...(item.states ?? []), ...(item.interests ?? [])]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    }).slice(0, 4);
+  }, [opportunities, deferredQuery, quickFilter]);
+
+  const isDark = theme === 'dark';
+  const surface = isDark ? 'bg-[#111827]' : 'bg-white';
+  const page = isDark ? 'bg-[#f7f8fa] text-slate-100' : 'bg-[#f7f8fa] text-slate-900';
+  const border = isDark ? 'border-slate-700' : 'border-slate-200';
+  const muted = isDark ? 'text-slate-400' : 'text-slate-500';
+  const subtle = isDark ? 'text-slate-300' : 'text-slate-600';
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] overflow-x-hidden">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-2xl">
-        <div className="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-5">
-          <Logo size="md" />
-          <nav className="hidden md:flex items-center gap-7 text-[11px] uppercase tracking-[0.16em] text-white/45">
-            <a href="#features" className="hover:text-white transition-colors">Features</a>
-            <a href="#path" className="hover:text-white transition-colors">Your path</a>
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
+    <div className={`min-h-screen ${page} overflow-x-hidden`}>
+      <header className={`sticky top-0 z-40 border-b ${border} ${isDark ? 'bg-[#f7f8fa]/95 text-slate-900' : 'bg-white/95'} backdrop-blur-xl`}>
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+          <button onClick={() => onNavigate('landing')} className="shrink-0" aria-label="NextMarga home"><Logo size="md" /></button>
+          <nav className="hidden md:flex items-center gap-6 text-[10px] font-medium text-slate-600">
+            <button onClick={() => onNavigate('explore')} className="hover:text-slate-950 transition-colors">Opportunities</button>
+            <button onClick={onStartOnboarding} className="hover:text-slate-950 transition-colors">Roadmap</button>
+            <button onClick={() => onNavigate('auth')} className="hover:text-slate-950 transition-colors">Applications</button>
+            <button onClick={() => onNavigate('auth')} className="hover:text-slate-950 transition-colors">CareerAI</button>
+            <button onClick={() => onNavigate('auth')} className="hover:text-slate-950 transition-colors">About</button>
           </nav>
-          <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="h-9 w-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors" aria-label="Toggle theme">
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <button onClick={() => onNavigate('auth')} className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/15 bg-white/5 text-[11px] uppercase tracking-[0.15em] font-medium hover:bg-white/10 hover:border-white/30 transition-all">
-              Sign in <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button onClick={() => onNavigate('auth')} className="sm:hidden h-9 w-9 rounded-full border border-white/10 bg-white/5 flex items-center justify-center" aria-label="Sign in"><ArrowRight className="w-4 h-4" /></button>
+          <div className="ml-auto flex items-center gap-2">
+            <button onClick={() => document.getElementById('opportunity-search')?.focus()} className="hidden sm:inline-flex items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-[10px] text-slate-500 hover:text-slate-900" aria-label="Focus opportunity search"><Search className="h-3 w-3" /> Search</button>
+            <button onClick={toggleTheme} className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:text-slate-900" aria-label="Toggle theme">{isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}</button>
+            <button onClick={() => onNavigate('auth')} className="inline-flex items-center gap-1.5 rounded-md bg-sky-700 px-3 py-1.5 text-[10px] font-semibold text-white hover:bg-sky-800">Sign in <ArrowRight className="h-3 w-3" /></button>
           </div>
         </div>
       </header>
 
       <main>
-        <section className="relative border-b border-white/10">
-          <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-16 sm:pb-24">
-            <div className="grid lg:grid-cols-[1.1fr_.9fr] gap-12 lg:gap-20 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-white/50"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Personalized opportunity intelligence</div>
-                <h1 className="mt-7 max-w-4xl text-5xl sm:text-6xl lg:text-7xl font-light tracking-[-0.04em] leading-[0.98] font-serif-luxury">Find the opportunities that <span className="italic">move you forward.</span></h1>
-                <p className="mt-7 max-w-2xl text-base sm:text-lg leading-8 text-white/55">NextMarga brings scholarships, competitions, exams, internships, research, fellowships and career opportunities into one calm, personalized workspace.</p>
-                <div className="mt-9 flex flex-col sm:flex-row gap-3"><button onClick={onStartOnboarding} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#F5F2ED] px-6 py-3.5 text-xs uppercase tracking-[0.16em] font-semibold text-black shadow-[0_12px_40px_rgba(255,255,255,0.10)] hover:bg-white transition-all active:scale-[0.99]">Create my opportunity profile <ArrowRight className="w-4 h-4" /></button><button onClick={() => onNavigate('auth')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-xs uppercase tracking-[0.16em] text-white/80 hover:bg-white/[0.08] hover:text-white transition-all">Sign in to continue</button></div>
-                <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] uppercase tracking-[0.16em] text-white/35"><span className="flex items-center gap-2"><CheckCircle2 className="w-3.5 h-3.5" /> Verified opportunity records</span><span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5" /> Fast filters</span><span className="flex items-center gap-2"><Users className="w-3.5 h-3.5" /> Built for students</span></div>
-              </div>
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-4xl px-4 pb-5 pt-7 text-center sm:pt-9">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.22em] text-slate-400">Personalized opportunity intelligence</div>
+            <h1 className="mt-2 text-3xl font-semibold tracking-[-0.035em] text-slate-900 sm:text-4xl">Find opportunities that are right for you.</h1>
+            <p className="mx-auto mt-2 max-w-2xl text-[11px] leading-5 text-slate-500">Scholarships, internships, exams, fellowships, competitions, research programs and more — from trusted sources across India and the world.</p>
 
-              <div className="relative lg:pl-8"><div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4 sm:p-5 shadow-2xl"><div className="rounded-2xl border border-white/10 bg-[#111111] overflow-hidden"><div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><div><div className="text-[9px] uppercase tracking-[0.2em] text-white/35">Opportunity Hub</div><div className="text-sm mt-1">Your shortlist</div></div><div className="rounded-full border border-emerald-300/15 bg-emerald-300/5 px-2.5 py-1 text-[9px] uppercase tracking-wider text-emerald-200/70">Live</div></div><div className="p-3 space-y-2.5">{['National scholarship program', 'Research internship', 'Global student challenge'].map((item, index) => <div key={item} className="rounded-xl border border-white/10 bg-white/[0.025] p-3"><div className="flex items-start justify-between gap-3"><div><div className="text-xs text-white/85">{item}</div><div className="mt-1 text-[10px] text-white/35">{index === 0 ? 'Scholarship' : index === 1 ? 'Research' : 'Competition'} · Verified source</div></div><span className="text-[10px] text-white/50">{96 - index * 7}% match</span></div><div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden"><div className="h-full rounded-full bg-[#F5F2ED]" style={{ width: `${96 - index * 7}%` }} /></div></div>)}</div><div className="border-t border-white/10 px-4 py-3 flex items-center justify-between"><span className="text-[10px] text-white/35">Personalized for your profile</span><ArrowRight className="w-3.5 h-3.5 text-white/40" /></div></div></div><div className="hidden sm:flex absolute -bottom-5 -left-2 items-center gap-3 rounded-2xl border border-white/10 bg-[#151515] px-4 py-3 shadow-xl"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10"><Sparkles className="w-4 h-4" /></div><div><div className="text-[9px] uppercase tracking-[0.18em] text-white/35">AI matching</div><div className="text-xs mt-0.5">Less searching. More doing.</div></div></div></div>
+            <div className="mx-auto mt-5 flex max-w-2xl gap-2">
+              <label className="relative flex-1">
+                <span className="sr-only">Search opportunities</span>
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <input id="opportunity-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search scholarships, internships, exams, IIT, research..." className="h-9 w-full rounded-md border border-slate-200 bg-white pl-9 pr-3 text-[10px] text-slate-800 outline-none ring-sky-100 placeholder:text-slate-400 focus:border-sky-400 focus:ring-2" />
+              </label>
+              <button onClick={() => onNavigate('explore')} className="rounded-md bg-sky-700 px-4 text-[10px] font-semibold text-white hover:bg-sky-800">Search</button>
+            </div>
+
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5" aria-label="Quick filters">
+              <span className="mr-1 self-center text-[9px] font-medium text-slate-400">Quick Filters</span>
+              {quickFilters.map((filter) => <button key={filter.id} onClick={() => setQuickFilter(filter.id)} aria-pressed={quickFilter === filter.id} className={`rounded-md border px-2.5 py-1.5 text-[9px] transition-colors ${quickFilter === filter.id ? 'border-sky-200 bg-sky-50 font-semibold text-sky-700' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-800'}`}>{filter.label}</button>)}
             </div>
           </div>
         </section>
 
-        <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20"><div className="max-w-2xl"><div className="text-[10px] uppercase tracking-[0.28em] text-white/35">Everything in one place</div><h2 className="mt-3 text-3xl sm:text-4xl font-light font-serif-luxury">A workspace designed around your next move.</h2></div><div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">{featureCards.map(({ title, text, icon: Icon }) => <div key={title} className="group rounded-2xl border border-white/10 bg-white/[0.025] p-5 hover:bg-white/[0.05] hover:border-white/20 transition-all"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Icon className="w-4 h-4 text-white/65" /></div><h3 className="mt-5 text-sm font-medium">{title}</h3><p className="mt-2 text-xs leading-6 text-white/45">{text}</p></div>)}</div></section>
+        <section className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div><div className="text-[10px] font-semibold text-slate-700">{loading ? 'Loading verified opportunities…' : `${filtered.length} featured opportunities`}</div><div className="mt-0.5 text-[9px] text-slate-400">Explore a preview before signing in.</div></div>
+            <button onClick={() => onNavigate('explore')} className="text-[9px] font-medium text-sky-700 hover:text-sky-900">View all opportunities <ChevronRight className="inline h-3 w-3" /></button>
+          </div>
 
-        <section id="path" className="border-y border-white/10 bg-white/[0.018]"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20"><div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5"><div><div className="text-[10px] uppercase tracking-[0.28em] text-white/35">Your opportunity path</div><h2 className="mt-3 text-3xl sm:text-4xl font-light font-serif-luxury">From discovery to destination.</h2></div><button onClick={onStartOnboarding} className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-white/60 hover:text-white">Build my path <ArrowRight className="w-3.5 h-3.5" /></button></div><div className="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">{milestones.map(({ title, text, icon: Icon }, index) => <div key={title} className="relative rounded-2xl border border-white/10 bg-[#111111] p-5"><div className="flex items-center justify-between"><div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5"><Icon className="w-4 h-4 text-white/60" /></div><span className="text-[9px] uppercase tracking-[0.2em] text-white/25">0{index + 1}</span></div><h3 className="mt-5 text-sm">{title}</h3><p className="mt-2 text-xs leading-6 text-white/40">{text}</p></div>)}</div></div></section>
+          <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+            {filtered.map((item) => <article key={item.id} className={`${surface} group flex min-h-[190px] flex-col rounded-lg border ${border} p-3 shadow-sm transition-shadow hover:shadow-md`}>
+              <div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex flex-wrap gap-1"><span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[7px] font-semibold text-emerald-700">Verified</span>{item.isGovt && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[7px] font-semibold text-slate-500">Government</span>}</div><h2 className={`mt-1.5 line-clamp-2 text-[12px] font-semibold leading-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.title}</h2><p className="mt-0.5 truncate text-[8px] text-slate-400">{item.organization || 'Verified source'}</p></div><span className="shrink-0 rounded-full bg-amber-50 px-1.5 py-1 text-[7px] font-semibold text-amber-700">{item.timeRemainingBadge || item.deadlineDisplay}</span></div>
+              <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[8px] text-slate-500"><span>{categoryLabel(item.category)}</span><span>{item.mode || 'Online'}</span><span>{item.fee || 'Free'}</span><span>{item.eligibility || 'Profile based'}</span></div>
+              <p className="mt-2 line-clamp-2 flex-1 text-[9px] leading-4 text-slate-500">{item.description}</p>
+              <div className="mt-2 flex gap-1.5"><button onClick={() => onNavigate('auth')} className="flex-1 rounded-md border border-slate-200 py-1.5 text-[8px] font-medium text-slate-600 hover:bg-slate-50">Save</button><button onClick={() => onNavigate('auth')} className="flex-1 rounded-md bg-sky-700 py-1.5 text-[8px] font-semibold text-white hover:bg-sky-800">View details</button><a href={item.officialUrl} target="_blank" rel="noopener noreferrer" className="rounded-md border border-slate-200 px-2 py-1.5 text-[8px] font-medium text-slate-500 hover:bg-slate-50">Official</a></div>
+            </article>)}
+          </div>
 
-        <section id="how-it-works" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20"><div className="grid lg:grid-cols-3 gap-4">{[['01', 'Tell us about you', 'Create a profile once. Your class, interests, board and location shape the discovery experience.'], ['02', 'Explore with less friction', 'Search the global directory, use quick filters, save strong matches and open verified source links.'], ['03', 'Act on the right ones', 'Track applications, deadlines and your roadmap so opportunities turn into progress.']].map(([number, title, text]) => <div key={number} className="rounded-2xl border border-white/10 p-6"><div className="text-[10px] font-mono text-white/25">{number}</div><h3 className="mt-8 text-lg font-serif-luxury">{title}</h3><p className="mt-3 text-sm leading-7 text-white/45">{text}</p></div>)}</div></section>
+          {filtered.length === 0 && <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center"><Search className="mx-auto h-5 w-5 text-slate-300" /><p className="mt-2 text-[10px] text-slate-500">No preview matches that search.</p><button onClick={() => { setQuery(''); setQuickFilter('all'); }} className="mt-2 text-[9px] font-semibold text-sky-700">Clear search and filters</button></div>}
+        </section>
 
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20"><div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] px-6 sm:px-10 py-10 sm:py-12"><div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/5 blur-3xl" /><div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-7"><div><div className="text-[10px] uppercase tracking-[0.25em] text-white/35">Ready when you are</div><h2 className="mt-2 text-2xl sm:text-3xl font-light font-serif-luxury">Stop hunting. Start moving.</h2><p className="mt-2 max-w-xl text-sm leading-6 text-white/45">Create your profile and let NextMarga turn a large opportunity universe into a clearer personal path.</p></div><button onClick={onStartOnboarding} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#F5F2ED] px-6 py-3.5 text-xs uppercase tracking-[0.16em] font-semibold text-black hover:bg-white transition-all">Get started <ArrowRight className="w-4 h-4" /></button></div></div></section>
+        <section className="border-y border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between"><div><h2 className="text-[11px] font-semibold text-slate-800">Explore by goal</h2><p className="mt-0.5 text-[9px] text-slate-400">Find opportunities based on what you want to achieve.</p></div><button onClick={() => onNavigate('explore')} className="text-[9px] text-sky-700">View all categories →</button></div>
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">{goalCards.map(({ title, icon: Icon }) => <button key={title} onClick={() => onNavigate('explore')} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-left text-[8px] font-medium text-slate-600 hover:border-sky-200 hover:bg-sky-50"><Icon className="h-3.5 w-3.5 shrink-0 text-sky-600" />{title}</button>)}</div>
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-sky-100 bg-sky-50 px-4 py-3 sm:flex-row sm:items-center"><div className="flex items-start gap-2.5"><div className="rounded-md bg-white p-2 text-sky-700 shadow-sm"><Sparkles className="h-4 w-4" /></div><div><div className="text-[10px] font-semibold text-slate-800">Sign in to save and track</div><p className="mt-0.5 text-[9px] leading-4 text-slate-500">Build a profile, save opportunities, personalize your roadmap and track applications.</p></div></div><button onClick={() => onNavigate('auth')} className="shrink-0 rounded-md bg-sky-700 px-3 py-1.5 text-[9px] font-semibold text-white hover:bg-sky-800">Sign in to save & track</button></div>
+        </section>
       </main>
 
-      <footer className="border-t border-white/10"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 flex flex-col sm:flex-row gap-3 items-center justify-between"><div className="text-[10px] uppercase tracking-[0.2em] text-white/25">NextMarga · Opportunity intelligence for students</div><button onClick={() => onNavigate('auth')} className="text-[10px] uppercase tracking-[0.18em] text-white/45 hover:text-white">Sign in to your workspace</button></div></footer>
+      <footer className="border-t border-slate-200 bg-white"><div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3 text-[8px] text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8"><span>NextMarga · Opportunity intelligence for students</span><div className="flex gap-4"><button onClick={() => onNavigate('auth')}>Privacy</button><button onClick={() => onNavigate('auth')}>Help</button><button onClick={() => onNavigate('auth')}>About</button></div></div></footer>
     </div>
   );
 };
