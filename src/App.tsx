@@ -25,7 +25,8 @@ const NotificationsScreen = lazy(() => import('./components/NotificationsScreen'
 const ProfileScreen = lazy(() => import('./components/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const SettingsScreen = lazy(() => import('./components/SettingsScreen').then((m) => ({ default: m.SettingsScreen })));
 
-const protectedScreens: AppScreen[] = ['home', 'detail', 'roadmap', 'explore', 'applications', 'assessment', 'notifications', 'profile', 'settings'];
+// Discovery is intentionally public: users should be able to search and inspect opportunities before signing in.
+const protectedScreens: AppScreen[] = ['home', 'roadmap', 'applications', 'assessment', 'notifications', 'profile', 'settings'];
 const ScreenLoader = () => <div className="min-h-[45vh] flex items-center justify-center"><div className="text-center"><div className="text-[10px] uppercase tracking-[0.3em] text-white/35">NextMarga</div><div className="mt-2 text-xs text-white/45">Loading…</div></div></div>;
 
 function getCachedProfile(userId: string): UserProfile {
@@ -95,7 +96,7 @@ export function App() {
     try {
       const raw = localStorage.getItem('nextmarga_preferences');
       const prefs = raw ? JSON.parse(raw) : {};
-      document.documentElement.dataset.theme = prefs.theme || 'dark';
+      document.documentElement.dataset.theme = prefs.theme || 'light';
       document.documentElement.dataset.accent = prefs.accent || 'ivory';
       document.documentElement.dataset.compact = String(Boolean(prefs.compactMode));
       document.documentElement.dataset.reducedMotion = String(Boolean(prefs.reducedMotion));
@@ -118,8 +119,18 @@ export function App() {
     try { localStorage.setItem(`nextmarga_profile_${authUserId}`, JSON.stringify(profile)); } catch {}
   }, [profile, authUserId]);
 
-  const handleToggleSaveOpportunity = async (oppId: string) => { try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); } };
-  const handleApplyOpportunity = async (oppId: string) => { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); };
+  const handleToggleSaveOpportunity = async (oppId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setCurrentScreen('auth'); return; }
+    try { setAppError(''); const saved = await toggleSavedOpportunity(oppId); setSavedOpportunityIds((prev) => saved ? [...new Set([...prev, oppId])] : prev.filter((id) => id !== oppId)); await refreshApplications(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update saved opportunity.'); }
+  };
+
+  const handleApplyOpportunity = async (oppId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setCurrentScreen('auth'); return; }
+    try { setAppError(''); await applyToOpportunity(oppId); setSavedOpportunityIds((prev) => prev.filter((id) => id !== oppId)); await refreshApplications(); setCurrentScreen('applications'); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not start the application.'); }
+  };
+
   const handleUpdateApplicationStatus = async (id: string, status: ApplicationItem['status']) => { try { setAppError(''); await updateApplicationStatus(id, status); await loadUserData(); } catch (error) { setAppError(error instanceof Error ? error.message : 'Could not update application.'); } };
   const handleSelectOpportunity = (opp: Opportunity) => { setSelectedOpportunity(opp); setCurrentScreen('detail'); };
   const handleSelectOpportunityById = (id: string) => { const match = opportunities.find((o) => o.id === id); if (match) { setSelectedOpportunity(match); setCurrentScreen('detail'); } };
@@ -133,7 +144,7 @@ export function App() {
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
-  if (authLoading) return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-white/40">NextMarga</div><div className="mt-3 text-sm text-white/60">Preparing your opportunity path...</div></div></div>;
+  if (authLoading) return <div className="min-h-screen bg-white text-slate-700 flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-slate-400">NextMarga</div><div className="mt-3 text-sm text-slate-500">Preparing your opportunity path...</div></div></div>;
 
   return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex flex-col font-sans selection:bg-white/20 selection:text-white">
     {showTopHeader && <TopHeader profile={profile} userEmail={userEmail} unreadNotificationsCount={unreadCount} onNavigate={(scr) => void navigate(scr)} />}
