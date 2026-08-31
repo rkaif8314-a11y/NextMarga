@@ -138,7 +138,7 @@ export function App() {
 
   const unreadCount = notifications.filter((n) => n.unread).length;
   const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
-  const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
+  const showTopHeader = !['landing', 'auth', 'onboarding'].includes(currentScreen);
   if (authLoading) return <div className="min-h-screen bg-white text-slate-700 flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-slate-400">NextMarga</div><div className="mt-3 text-sm text-slate-500">Preparing your opportunity path...</div></div></div>;
 
   return <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-sky-100 selection:text-slate-950">
