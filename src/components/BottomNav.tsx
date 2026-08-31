@@ -17,8 +17,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0A0A0A]/95 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.8)]">
-      <div className="max-w-md mx-auto px-3 py-2 flex items-center justify-between">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
+      <div className="mx-auto flex max-w-2xl items-center justify-between px-3 py-2">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
           const Icon = item.icon;
@@ -27,26 +27,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-lg transition-all duration-200 select-none group ${
-                isActive
-                  ? 'text-[#F5F2ED]'
-                  : 'text-white/40 hover:text-white/80'
+              className={`group flex min-w-16 flex-col items-center justify-center rounded-lg px-2 py-1.5 text-center transition-colors ${
+                isActive ? 'text-sky-700' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
-              <div
-                className={`p-2 rounded-md transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white/10 border border-white/30 -translate-y-0.5 shadow-[0_0_15px_rgba(255,255,255,0.1)]'
-                    : 'bg-transparent hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-[#F5F2ED] stroke-[2]' : 'text-white/50 group-hover:text-white/80 stroke-[1.5]'}`} />
-              </div>
-              <span
-                className={`text-[10px] mt-1 uppercase tracking-[0.15em] font-medium transition-colors ${
-                  isActive ? 'text-[#F5F2ED] font-semibold' : 'text-white/40 group-hover:text-white/70'
-                }`}
-              >
+              <span className={`flex h-9 w-9 items-center justify-center rounded-lg border transition-colors ${
+                isActive
+                  ? 'border-sky-200 bg-sky-50 text-sky-700'
+                  : 'border-transparent bg-transparent text-slate-400 group-hover:bg-slate-50'
+              }`}>
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className={`mt-1 text-[10px] font-medium tracking-wide ${isActive ? 'text-sky-700' : 'text-slate-500'}`}>
                 {item.label}
               </span>
             </button>
