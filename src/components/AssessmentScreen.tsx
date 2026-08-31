@@ -105,20 +105,20 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] pb-28 animate-fadeIn">
+    <div className="min-h-screen bg-slate-50 text-slate-950 pb-28 animate-fadeIn">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 px-4 py-3">
+      <header className="sticky top-0 z-30 bg-slate-50/90 backdrop-blur-xl border-b border-slate-200 px-4 py-3">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
           <button
             onClick={onExit}
-            className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-medium text-white/60 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-medium text-slate-600 hover:text-slate-950 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Abort Session</span>
           </button>
 
-          <div className="text-[10px] font-mono uppercase tracking-wider text-white/80 bg-white/5 border border-white/10 px-3 py-1 rounded">
-            TOTAL TIME // <span className="text-[#F5F2ED] font-bold">{formatTime(remainingTime)}</span>
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-800 bg-slate-50 border border-slate-200 px-3 py-1 rounded">
+            TOTAL TIME // <span className="text-slate-950 font-bold">{formatTime(remainingTime)}</span>
           </div>
         </div>
       </header>
@@ -152,10 +152,10 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-2xl font-light text-[#F5F2ED] font-mono tracking-tight">
+              <span className="text-2xl font-light text-slate-950 font-mono tracking-tight">
                 {formatTime(questionTimer)}
               </span>
-              <span className="text-[9px] font-mono text-white/40 tracking-[0.2em] uppercase">
+              <span className="text-[9px] font-mono text-slate-500 tracking-[0.2em] uppercase">
                 MIN : SEC
               </span>
             </div>
@@ -163,49 +163,49 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
         </div>
 
         {/* Prompt Card */}
-        <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 space-y-3">
-          <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-white/50">
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-3">
+          <div className="text-[10px] font-mono uppercase tracking-[0.25em] text-slate-500">
             QUESTION // 01 OF 03
           </div>
-          <h1 className="text-base sm:text-lg font-serif-luxury font-light text-[#F5F2ED] leading-relaxed">
+          <h1 className="text-base sm:text-lg font-serif-luxury font-light text-slate-950 leading-relaxed">
             Tell us about a time you solved a complex analytical obstacle. Walk us through your thought process, iterative adjustments, and the final outcome.
           </h1>
         </div>
 
         {/* Evaluation Modal / Card if evaluated */}
         {evaluationResult ? (
-          <div className="bg-[#121212] border border-white/20 rounded-2xl p-6 space-y-5 animate-fadeIn shadow-lg">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <div className="bg-white border border-slate-300 rounded-2xl p-6 space-y-5 animate-fadeIn shadow-lg">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-[#F5F2ED]" />
-                <h3 className="font-serif-luxury font-medium text-[#F5F2ED] text-base">AI Evaluation Diagnostic</h3>
+                <Award className="w-5 h-5 text-slate-950" />
+                <h3 className="font-serif-luxury font-medium text-slate-950 text-base">AI Evaluation Diagnostic</h3>
               </div>
-              <div className="px-3 py-1 bg-[#F5F2ED] text-black font-mono text-xs font-semibold rounded">
+              <div className="px-3 py-1 bg-sky-700 text-slate-950 font-mono text-xs font-semibold rounded">
                 SCORE // {evaluationResult.score}/100
               </div>
             </div>
 
-            <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-light">
+            <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-light">
               {evaluationResult.feedback}
             </p>
 
             <div className="space-y-2">
-              <div className="text-[10px] uppercase font-mono tracking-[0.2em] text-white/50">Demonstrated Strengths</div>
+              <div className="text-[10px] uppercase font-mono tracking-[0.2em] text-slate-500">Demonstrated Strengths</div>
               {evaluationResult.strengths?.map((s: string, idx: number) => (
-                <div key={idx} className="flex items-center gap-2 text-xs text-white/80 font-light">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-white/70 flex-shrink-0" />
+                <div key={idx} className="flex items-center gap-2 text-xs text-slate-800 font-light">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
                   <span>{s}</span>
                 </div>
               ))}
             </div>
 
-            <div className="p-3.5 bg-[#0A0A0A] rounded-xl border border-white/10 text-xs text-white/70 font-light">
-              <span className="text-[#F5F2ED] font-medium font-mono uppercase text-[10px] tracking-wider block mb-1">Strategic Recommendation:</span> {evaluationResult.improvementTip}
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 font-light">
+              <span className="text-slate-950 font-medium font-mono uppercase text-[10px] tracking-wider block mb-1">Strategic Recommendation:</span> {evaluationResult.improvementTip}
             </div>
 
             <button
               onClick={onExit}
-              className="w-full py-3 bg-[#F5F2ED] text-black font-medium text-xs uppercase tracking-[0.15em] rounded-lg hover:bg-white transition-all shadow-sm"
+              className="w-full py-3 bg-sky-700 text-slate-950 font-medium text-xs uppercase tracking-[0.15em] rounded-lg hover:bg-sky-800 transition-all shadow-sm"
             >
               Conclude & Return to Applications
             </button>
@@ -214,7 +214,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
           <>
             {/* Written Textarea Input */}
             <div className="space-y-2">
-              <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-white/50">
+              <label className="block text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
                 Formulate Written Response
               </label>
               <textarea
@@ -222,22 +222,22 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
                 onChange={(e) => setTextAnswer(e.target.value)}
                 placeholder="I approached the analytical challenge by first formulating the core constraints..."
                 rows={4}
-                className="w-full p-4 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 text-xs font-light focus:outline-none focus:border-white/40 transition-colors"
+                className="w-full p-4 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 text-xs font-light focus:outline-none focus:border-white/40 transition-colors"
               />
             </div>
 
             {/* Divider OR */}
             <div className="relative flex items-center justify-center">
-              <div className="border-t border-white/10 w-full" />
-              <span className="bg-[#0A0A0A] px-3 text-[10px] font-mono tracking-widest text-white/40 uppercase">
+              <div className="border-t border-slate-200 w-full" />
+              <span className="bg-slate-50 px-3 text-[10px] font-mono tracking-widest text-slate-500 uppercase">
                 OR
               </span>
-              <div className="border-t border-white/10 w-full" />
+              <div className="border-t border-slate-200 w-full" />
             </div>
 
             {/* Audio Recording Section */}
-            <div className="bg-[#121212] border border-white/10 rounded-2xl p-6 space-y-4 text-center">
-              <div className="text-xs uppercase tracking-[0.15em] font-mono text-white/70">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 text-center">
+              <div className="text-xs uppercase tracking-[0.15em] font-mono text-slate-700">
                 Audio Response Stream (Limit: 3 Minutes)
               </div>
 
@@ -248,14 +248,14 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
                     {[16, 24, 32, 20, 28, 14, 30, 22].map((h, i) => (
                       <div
                         key={i}
-                        className="w-1 bg-[#F5F2ED] rounded-full animate-pulse"
+                        className="w-1 bg-sky-700 rounded-full animate-pulse"
                         style={{ height: `${h}px`, animationDelay: `${i * 100}ms` }}
                       />
                     ))}
                   </div>
                   <button
                     onClick={stopRecording}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 text-white font-medium text-xs uppercase tracking-[0.15em] shadow-md active:scale-95 transition-all"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-red-600 text-slate-950 font-medium text-xs uppercase tracking-[0.15em] shadow-md active:scale-95 transition-all"
                   >
                     <Square className="w-3.5 h-3.5 fill-white" />
                     <span>Halt Recording</span>
@@ -269,7 +269,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
                       setRecordedAudioUrl(null);
                       startRecording();
                     }}
-                    className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-slate-600 hover:text-slate-950 transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Discard & Re-record</span>
@@ -278,7 +278,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
               ) : (
                 <button
                   onClick={startRecording}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-[#F5F2ED] font-medium text-xs uppercase tracking-[0.15em] active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-slate-50 hover:bg-sky-800/10 border border-slate-200 text-slate-950 font-medium text-xs uppercase tracking-[0.15em] active:scale-95 transition-all"
                 >
                   <Mic className="w-3.5 h-3.5" />
                   <span>Initialize Voice Recording</span>
@@ -290,7 +290,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
             <button
               onClick={handleSubmitResponse}
               disabled={evaluating}
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-[#F5F2ED] hover:bg-white text-black font-medium text-xs uppercase tracking-[0.15em] shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-sky-700 hover:bg-sky-800 text-white font-medium text-xs uppercase tracking-[0.15em] shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] transition-all disabled:opacity-50"
             >
               {evaluating ? (
                 <>
