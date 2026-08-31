@@ -37,7 +37,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
   onSelectOpportunity,
   onToggleSave,
 }) => (
-  <div className="min-h-screen bg-[#F8F7F3] text-[#111827] selection:bg-sky-200 selection:text-slate-950">
+  <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-sky-200 selection:text-slate-950">
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <button onClick={() => onNavigate('landing')} className="flex items-center gap-3 text-left" aria-label="NextMarga home">
@@ -82,7 +82,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({
                 <p className="mt-1 text-sm leading-6 text-slate-600">Save opportunities, personalize your roadmap and continue applications from the same place.</p>
               </div>
             </div>
-            <button onClick={onStartOnboarding} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Start free <ArrowRight className="h-4 w-4" /></button>
+            <button onClick={onStartOnboarding} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-md bg-sky-700 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-800">Start free <ArrowRight className="h-4 w-4" /></button>
           </aside>
         </div>
       </section>
