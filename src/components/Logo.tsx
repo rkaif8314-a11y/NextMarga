@@ -23,14 +23,14 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, classN
     <div className={`flex items-center gap-3 select-none ${className}`}>
       {/* Sleek Minimalist Geometric Monogram */}
       <div className={`relative ${iconSizes[size]} flex items-center justify-center`}>
-        <div className="w-full h-full border border-white/30 rotate-45 flex items-center justify-center bg-white/5 transition-all duration-300 group-hover:border-white/60">
-          <div className="w-2 h-2 bg-[#F5F2ED] rotate-45 shadow-[0_0_8px_rgba(255,255,255,0.6)]"></div>
+        <div className="w-full h-full border border-sky-200 rotate-45 flex items-center justify-center bg-sky-50 transition-all duration-300 group-hover:border-white/60">
+          <div className="w-2 h-2 bg-sky-700 rotate-45 shadow-sm"></div>
         </div>
       </div>
 
       {showText && (
-        <span className={`font-serif-luxury font-medium text-[#F5F2ED] ${textSizes[size]}`}>
-          NEXT<span className="font-light text-white/50">MARGA</span>
+        <span className={`font-serif-luxury font-medium text-slate-950 ${textSizes[size]}`}>
+          NEXT<span className="font-light text-slate-500">MARGA</span>
         </span>
       )}
     </div>
