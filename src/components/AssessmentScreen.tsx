@@ -180,7 +180,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
                 <Award className="w-5 h-5 text-slate-950" />
                 <h3 className="font-serif-luxury font-medium text-slate-950 text-base">AI Evaluation Diagnostic</h3>
               </div>
-              <div className="px-3 py-1 bg-sky-700 text-slate-950 font-mono text-xs font-semibold rounded">
+              <div className="px-3 py-1 bg-sky-700 text-white font-mono text-xs font-semibold rounded">
                 SCORE // {evaluationResult.score}/100
               </div>
             </div>
@@ -205,7 +205,7 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
 
             <button
               onClick={onExit}
-              className="w-full py-3 bg-sky-700 text-slate-950 font-medium text-xs uppercase tracking-[0.15em] rounded-lg hover:bg-sky-800 transition-all shadow-sm"
+              className="w-full py-3 bg-sky-700 text-white font-medium text-xs uppercase tracking-[0.15em] rounded-lg hover:bg-sky-800 transition-all shadow-sm"
             >
               Conclude & Return to Applications
             </button>
