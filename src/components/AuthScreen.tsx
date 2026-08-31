@@ -143,7 +143,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack, onAuthenticated 
           type="button"
           onClick={handleGoogle}
           disabled={busy}
-          className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl bg-white text-white text-xs uppercase tracking-[0.12em] font-semibold disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl bg-white text-slate-950 text-xs uppercase tracking-[0.12em] font-semibold disabled:opacity-50"
         >
           <Chrome className="w-4 h-4" />
           Continue with Google
@@ -166,7 +166,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack, onAuthenticated 
               clearMessages();
             }}
             className={`flex-1 py-2.5 rounded-lg text-xs uppercase tracking-[0.15em] transition ${mode === 'signup'
-                ? 'bg-sky-700 text-slate-950'
+                ? 'bg-sky-700 text-white'
                 : 'text-slate-500 hover:text-slate-950'
               }`}
           >
@@ -180,7 +180,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack, onAuthenticated 
               clearMessages();
             }}
             className={`flex-1 py-2.5 rounded-lg text-xs uppercase tracking-[0.15em] transition ${mode === 'signin'
-                ? 'bg-sky-700 text-slate-950'
+                ? 'bg-sky-700 text-white'
                 : 'text-slate-500 hover:text-slate-950'
               }`}
           >
@@ -297,7 +297,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onBack, onAuthenticated 
 
           <button
             disabled={busy}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-sky-700 text-slate-950 text-xs uppercase tracking-[0.16em] font-semibold disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-sky-700 text-white text-xs uppercase tracking-[0.16em] font-semibold disabled:opacity-50"
           >
             {busy
               ? 'Please wait...'
