@@ -80,32 +80,32 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] pb-24 flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-50 text-slate-950 pb-24 flex flex-col justify-between">
       {/* Header with Progress Bar */}
-      <div className="bg-[#0A0A0A]/90 backdrop-blur-xl sticky top-0 z-30 border-b border-white/10 px-4 pt-4 pb-3">
+      <div className="bg-slate-50/90 backdrop-blur-xl sticky top-0 z-30 border-b border-slate-200 px-4 pt-4 pb-3">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between mb-3">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+              className="p-2 -ml-2 rounded-lg border border-slate-200 text-slate-700 hover:text-slate-950 hover:bg-slate-50 transition-colors"
               title="Back"
             >
               <ArrowLeft className="w-4 h-4 stroke-[1.5]" />
             </button>
 
-            <div className="text-[10px] font-mono tracking-[0.2em] text-white/50 uppercase">
+            <div className="text-[10px] font-mono tracking-[0.2em] text-slate-500 uppercase">
               PHASE {currentStep} OF {totalSteps}
             </div>
 
-            <div className="text-xs uppercase tracking-wider font-mono text-white/80">
+            <div className="text-xs uppercase tracking-wider font-mono text-slate-800">
               {getStepTitle()}
             </div>
           </div>
 
           {/* Progress Bar Line */}
-          <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
             <div
-              className="bg-[#F5F2ED] h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(255,255,255,0.6)]"
+              className="bg-sky-700 h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_8px_rgba(255,255,255,0.6)]"
               style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
@@ -118,20 +118,20 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 1 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Candidate Profile
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 Tell us about yourself
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 We'll use this information to initialize your candidate record and customize strategic trajectories.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Full Legal Name
                 </label>
                 <input
@@ -139,13 +139,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="e.g. Jane Doe"
-                  className="w-full px-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
-                  Date of Birth <span className="text-white/40">*</span>
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
+                  Date of Birth <span className="text-slate-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -153,25 +153,25 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.dob}
                     onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                     placeholder="mm/dd/yyyy"
-                    className="w-full pl-4 pr-11 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-4 pr-11 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
-                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
                     <Calendar className="w-4 h-4" />
                   </div>
                 </div>
-                <p className="mt-1.5 text-[10px] font-mono text-white/40">
+                <p className="mt-1.5 text-[10px] font-mono text-slate-500">
                   Verifies candidate eligibility constraints for high-tier academic programs.
                 </p>
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Gender
                 </label>
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                 >
                   <option value="">Select an option</option>
                   <option value="Male">Male</option>
@@ -182,11 +182,11 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Phone Number
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <Phone className="w-4 h-4" />
                   </div>
                   <input
@@ -194,7 +194,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="(555) 000-0000"
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
               </div>
@@ -206,24 +206,24 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 2 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Institutional Alignment
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 Where do you study?
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 Calibrates your learning roadmap against national curriculum benchmarks.
               </p>
             </div>
 
             <div className="space-y-4">
               <div className="relative">
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   School / College Institution
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <Search className="w-4 h-4" />
                   </div>
                   <input
@@ -236,13 +236,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     }}
                     onFocus={() => setShowSchoolDropdown(true)}
                     placeholder="Search school name..."
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
 
                 {/* Autocomplete Dropdown */}
                 {showSchoolDropdown && filteredSchools.length > 0 && (
-                  <div className="mt-1 bg-[#121212] border border-white/20 rounded-xl shadow-xl divide-y divide-white/10 overflow-hidden max-h-48 overflow-y-auto">
+                  <div className="mt-1 bg-white border border-slate-300 rounded-xl shadow-xl divide-y divide-slate-200 overflow-hidden max-h-48 overflow-y-auto">
                     {filteredSchools.map((school, idx) => (
                       <button
                         key={idx}
@@ -252,9 +252,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                           setFormData({ ...formData, schoolName: school });
                           setShowSchoolDropdown(false);
                         }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-white/5 flex items-center gap-2.5 text-xs text-white/80 transition-colors"
+                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 flex items-center gap-2.5 text-xs text-slate-800 transition-colors"
                       >
-                        <School className="w-3.5 h-3.5 text-white/60 flex-shrink-0" />
+                        <School className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
                         <span>{school}</span>
                       </button>
                     ))}
@@ -263,13 +263,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Current Class Standing
                 </label>
                 <select
                   value={formData.currentClass}
                   onChange={(e) => setFormData({ ...formData, currentClass: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                 >
                   {sampleClasses.map((cls) => (
                     <option key={cls} value={cls}>
@@ -280,13 +280,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Curricular Board
                 </label>
                 <select
                   value={formData.educationalBoard}
                   onChange={(e) => setFormData({ ...formData, educationalBoard: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                 >
                   {sampleBoards.map((board) => (
                     <option key={board} value={board}>
@@ -303,24 +303,24 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 3 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Parental Records
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 Guardian Information
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 Recorded for scholarship verification and program communication.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Father's Legal Name
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -328,17 +328,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.fatherName}
                     onChange={(e) => setFormData({ ...formData, fatherName: e.target.value })}
                     placeholder="Enter father's full name"
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Mother's Legal Name
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <User className="w-4 h-4" />
                   </div>
                   <input
@@ -346,17 +346,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.motherName}
                     onChange={(e) => setFormData({ ...formData, motherName: e.target.value })}
                     placeholder="Enter mother's full name"
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   Guardian's Phone Number
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <Phone className="w-4 h-4" />
                   </div>
                   <input
@@ -364,7 +364,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.guardianPhone}
                     onChange={(e) => setFormData({ ...formData, guardianPhone: e.target.value })}
                     placeholder="+1 (555) 000-0000"
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
               </div>
@@ -376,24 +376,24 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 4 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Regional Jurisdiction
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 Where are you located?
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 State scholarships and regional fellowships require accurate geographic records.
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   State / Province
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
                     <MapPin className="w-4 h-4" />
                   </div>
                   <input
@@ -401,13 +401,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                     placeholder="e.g. Bihar, Maharashtra, Delhi"
-                    className="w-full pl-10 pr-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                    className="w-full pl-10 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-mono uppercase tracking-wider text-white/60 mb-1.5">
+                <label className="block text-[10px] font-mono uppercase tracking-wider text-slate-600 mb-1.5">
                   City / District
                 </label>
                 <input
@@ -415,7 +415,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   placeholder="e.g. Patna, Mumbai, Bangalore"
-                  className="w-full px-4 py-3 bg-[#121212] rounded-xl border border-white/15 text-[#F5F2ED] placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
+                  className="w-full px-4 py-3 bg-white rounded-xl border border-slate-200 text-slate-950 placeholder-white/30 focus:outline-none focus:border-white/40 text-sm font-light transition-colors"
                 />
               </div>
             </div>
@@ -426,13 +426,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 5 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Disciplinary Focus
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 What are your interests?
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 Select the disciplines and strategic domains you wish to master.
               </p>
             </div>
@@ -447,8 +447,8 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     onClick={() => toggleInterest(interest)}
                     className={`px-4 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider border transition-all flex items-center gap-2 ${
                       isSelected
-                        ? 'bg-[#F5F2ED] text-black border-[#F5F2ED] shadow-sm'
-                        : 'bg-[#121212] text-white/70 border-white/10 hover:border-white/30 hover:text-white'
+                        ? 'bg-sky-700 text-white border-[#F5F2ED] shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-white/30 hover:text-slate-950'
                     }`}
                   >
                     {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
@@ -464,13 +464,13 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
         {currentStep === 6 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-white/40 block mb-1">
+              <span className="text-[10px] uppercase font-mono tracking-[0.25em] text-slate-500 block mb-1">
                 Strategic Horizon
               </span>
-              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-[#F5F2ED] tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-light font-serif-luxury text-slate-950 tracking-tight">
                 Choose your target trajectory
               </h1>
-              <p className="mt-2 text-white/60 text-xs sm:text-sm font-light leading-relaxed">
+              <p className="mt-2 text-slate-600 text-xs sm:text-sm font-light leading-relaxed">
                 NextMarga will craft an interactive, timeline-based roadmap tailored to this objective.
               </p>
             </div>
@@ -491,17 +491,17 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     onClick={() => setFormData({ ...formData, targetPath: path.id })}
                     className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
                       isSelected
-                        ? 'bg-white/10 border-white/40 shadow-sm'
-                        : 'bg-[#121212] border-white/10 hover:border-white/20'
+                        ? 'bg-slate-100 border-white/40 shadow-sm'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <span className="text-xl p-2 bg-white/5 rounded-lg border border-white/10">{path.icon}</span>
+                    <span className="text-xl p-2 bg-slate-50 rounded-lg border border-slate-200">{path.icon}</span>
                     <div className="flex-1">
-                      <div className="font-serif-luxury font-medium text-[#F5F2ED] text-sm sm:text-base">{path.id}</div>
-                      <div className="text-[11px] text-white/50 mt-0.5 font-light">{path.desc}</div>
+                      <div className="font-serif-luxury font-medium text-slate-950 text-sm sm:text-base">{path.id}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 font-light">{path.desc}</div>
                     </div>
                     {isSelected && (
-                      <div className="p-1 rounded-full bg-[#F5F2ED] text-black mt-1">
+                      <div className="p-1 rounded-full bg-sky-700 text-white mt-1">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     )}
@@ -514,12 +514,12 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
       </main>
 
       {/* Sticky Bottom Actions */}
-      <div className="bg-[#0A0A0A]/90 backdrop-blur-xl border-t border-white/10 p-4 sticky bottom-0 z-30">
+      <div className="bg-slate-50/90 backdrop-blur-xl border-t border-slate-200 p-4 sticky bottom-0 z-30">
         <div className="max-w-2xl mx-auto space-y-2.5">
           <button
             type="button"
             onClick={handleNext}
-            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-[#F5F2ED] hover:bg-white text-black font-medium text-xs uppercase tracking-[0.15em] shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-lg bg-sky-700 hover:bg-white text-black font-medium text-xs uppercase tracking-[0.15em] shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98] transition-all"
           >
             <span>{currentStep === totalSteps ? 'Complete Profile & Build Roadmap' : 'Continue'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -529,7 +529,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <button
               type="button"
               onClick={handleNext}
-              className="w-full text-center py-2 text-[10px] font-mono uppercase tracking-wider text-white/50 hover:text-white transition-colors"
+              className="w-full text-center py-2 text-[10px] font-mono uppercase tracking-wider text-slate-500 hover:text-slate-950 transition-colors"
             >
               Skip for now
             </button>
@@ -539,7 +539,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
             <button
               type="button"
               onClick={handleBack}
-              className="w-full text-center py-1.5 text-[10px] font-mono uppercase tracking-wider text-white/50 hover:text-white transition-colors"
+              className="w-full text-center py-1.5 text-[10px] font-mono uppercase tracking-wider text-slate-500 hover:text-slate-950 transition-colors"
             >
               Back
             </button>
