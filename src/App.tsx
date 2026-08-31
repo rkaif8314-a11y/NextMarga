@@ -95,7 +95,7 @@ export function App() {
     try {
       const raw = localStorage.getItem('nextmarga_preferences');
       const prefs = raw ? JSON.parse(raw) : {};
-      document.documentElement.dataset.theme = prefs.theme || 'light';
+      document.documentElement.dataset.theme = 'light';
       document.documentElement.dataset.accent = prefs.accent || 'blue';
       document.documentElement.dataset.compact = String(Boolean(prefs.compactMode));
       document.documentElement.dataset.reducedMotion = String(Boolean(prefs.reducedMotion));
@@ -141,7 +141,7 @@ export function App() {
   const showTopHeader = ['home', 'roadmap', 'explore'].includes(currentScreen);
   if (authLoading) return <div className="min-h-screen bg-white text-slate-700 flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-slate-400">NextMarga</div><div className="mt-3 text-sm text-slate-500">Preparing your opportunity path...</div></div></div>;
 
-  return <div className="min-h-screen bg-[#0A0A0A] text-[#F5F2ED] flex flex-col font-sans selection:bg-white/20 selection:text-white">
+  return <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-sky-100 selection:text-slate-950">
     {showTopHeader && <TopHeader profile={profile} userEmail={userEmail} unreadNotificationsCount={unreadCount} onNavigate={(scr) => void navigate(scr)} />}
     {appError && <div className="mx-auto w-full max-w-xl px-5 pt-4"><div className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3 text-xs text-red-200">{appError}</div></div>}
     <main className="flex-1"><Suspense fallback={<ScreenLoader />}>
