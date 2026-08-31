@@ -2,30 +2,87 @@ import React from 'react';
 import { Bell, Settings } from 'lucide-react';
 import { UserProfile, AppScreen } from '../types';
 
-interface TopHeaderProps { profile: UserProfile; userEmail?: string; unreadNotificationsCount?: number; onNavigate: (screen: AppScreen) => void; showSubtitlePill?: boolean; }
+interface TopHeaderProps {
+  profile: UserProfile;
+  userEmail?: string;
+  unreadNotificationsCount?: number;
+  onNavigate: (screen: AppScreen) => void;
+  showSubtitlePill?: boolean;
+}
 
-export const TopHeader: React.FC<TopHeaderProps> = ({ profile, userEmail, unreadNotificationsCount = 0, onNavigate, showSubtitlePill = true }) => {
+export const TopHeader: React.FC<TopHeaderProps> = ({
+  profile,
+  userEmail,
+  unreadNotificationsCount = 0,
+  onNavigate,
+  showSubtitlePill = true,
+}) => {
   const firstName = profile.fullName ? profile.fullName.split(' ')[0] : 'Scholar';
-  const interestsSummary = profile.interests && profile.interests.length > 0 ? profile.interests.slice(0, 2).join(' • ') : 'STEM • Research';
-  return <header className="bg-[#0A0A0A]/90 backdrop-blur-xl sticky top-0 z-30 border-b border-white/10 px-4 py-3 sm:px-6">
-    <div className="max-w-7xl mx-auto flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <button onClick={() => onNavigate('profile')} className="relative focus:outline-none focus:ring-1 focus:ring-white/40 rounded-full transition-transform active:scale-95 group" title="View Profile">
-          <img src={profile.avatarUrl} alt={profile.fullName || 'Profile'} className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border border-white/20 ring-1 ring-white/10 bg-white/5 transition-all group-hover:border-white/50" />
-        </button>
-        <div>
-          <div className="flex items-center gap-2"><span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-medium">Scholar Portal</span>{userEmail && <span className="hidden sm:inline text-[9px] text-emerald-300/60">● ACCOUNT CONNECTED</span>}</div>
-          <div className="font-serif-luxury text-[#F5F2ED] text-base sm:text-lg tracking-wide">Welcome, {firstName}</div>
-          {showSubtitlePill && <div className="mt-0.5 inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase tracking-[0.15em] font-medium bg-white/5 text-white/70 border border-white/10">{profile.currentClass} &nbsp;|&nbsp; {profile.state} &nbsp;|&nbsp; {interestsSummary}</div>}
+  const interestsSummary = profile.interests?.length
+    ? profile.interests.slice(0, 2).join(' • ')
+    : 'STEM • Research';
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xl px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            onClick={() => onNavigate('profile')}
+            className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-sky-200 active:scale-95"
+            title="View profile"
+          >
+            <img
+              src={profile.avatarUrl}
+              alt={profile.fullName || 'Profile'}
+              className="h-10 w-10 rounded-full object-cover border border-slate-200 bg-slate-100 sm:h-11 sm:w-11"
+            />
+          </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-slate-500">
+                Scholar Portal
+              </span>
+              {userEmail && (
+                <span className="hidden text-[9px] font-medium uppercase tracking-[0.12em] text-emerald-700 sm:inline">
+                  Account connected
+                </span>
+              )}
+            </div>
+            <div className="truncate font-display text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
+              Welcome, {firstName}
+            </div>
+            {showSubtitlePill && (
+              <div className="mt-0.5 inline-flex max-w-full truncate rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-slate-600">
+                {profile.currentClass} &nbsp;|&nbsp; {profile.state} &nbsp;|&nbsp; {interestsSummary}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            onClick={() => onNavigate('settings')}
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:scale-95"
+            title="Settings"
+            aria-label="Open settings"
+          >
+            <Settings className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onNavigate('notifications')}
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 active:scale-95"
+            title="Notifications"
+            aria-label="Open notifications"
+          >
+            <Bell className="h-4 w-4" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-700 px-1 text-[9px] font-bold text-white ring-2 ring-white">
+                {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button onClick={() => onNavigate('settings')} className="p-2.5 rounded-full border border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/30 active:scale-95 transition-all" title="Settings" aria-label="Open Settings"><Settings className="w-4 h-4" /></button>
-        <button onClick={() => onNavigate('notifications')} className="relative p-2.5 rounded-full border border-white/10 bg-white/5 text-white/80 hover:text-[#F5F2ED] hover:bg-white/10 hover:border-white/30 active:scale-95 transition-all focus:outline-none focus:ring-1 focus:ring-white/40" title="Notifications">
-          <Bell className="w-4 h-4 text-[#F5F2ED]" />
-          {unreadNotificationsCount > 0 && <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#F5F2ED] text-[9px] font-bold text-black ring-2 ring-[#0A0A0A]">{unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}</span>}
-        </button>
-      </div>
-    </div>
-  </header>;
+    </header>
+  );
 };
