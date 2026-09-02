@@ -20,8 +20,10 @@ function classNumber(value?: string | null): number | null {
   if (!value) return null;
   const match = value.match(/\b(?:class|grade)\s*(\d{1,2})\b/i);
   if (match) return Number(match[1]);
-  if (/undergraduate/i.test(value)) return 13;
-  if (/postgraduate|phd/i.test(value)) return 15;
+  if (/undergraduate|college|technical\s+degree/i.test(value)) return 13;
+  if (/postgraduate/i.test(value)) return 14;
+  if (/phd|doctoral/i.test(value)) return 15;
+  if (/technical\s+diploma|diploma/i.test(value)) return 12.5;
   return null;
 }
 
@@ -122,12 +124,26 @@ export function matchOpportunity(
 
   const interests = (profile.interests ?? []).map(normalize);
   const opportunityInterests = (opportunity.interests ?? []).map(normalize);
+  const interestAliases: Record<string, string[]> = {
+    'computer science': ['coding','software','technology','web development','app development'],
+    'coding': ['computer science','software','technology','web development'],
+    'artificial intelligence': ['ai','machine learning','data science','coding'],
+    'machine learning': ['artificial intelligence','ai','data science'],
+    'medicine': ['medical','biology','life sciences','public health'],
+    'design & ui/ux': ['design','ui','ux','graphic design','product'],
+    'entrepreneurship': ['startup','business','innovation','management'],
+    'research': ['science','engineering','phd','innovation'],
+    'sports': ['athletics','fitness','chess','esports'],
+  };
   if (interests.length && opportunityInterests.length) {
     const matched = interests.filter(interest =>
-      opportunityInterests.some(target => interest === target || interest.includes(target) || target.includes(interest))
+      opportunityInterests.some(target =>
+        interest === target || interest.includes(target) || target.includes(interest) ||
+        (interestAliases[interest] ?? []).some(alias => target.includes(alias) || alias.includes(target))
+      )
     );
     if (matched.length) {
-      score += Math.min(15, matched.length * 5);
+      score += Math.min(20, matched.length * 5);
       reasons.push(`Matches your interest in ${matched.slice(0, 2).join(' and ')}.`);
     }
   }
