@@ -61,8 +61,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 <Bell className="h-4 w-4" />
                 {unreadNotificationsCount > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-sky-700 px-1 text-[9px] font-bold text-white ring-2 ring-white">{unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}</span>}
               </button>
-              <button onClick={() => onNavigate('profile')} className="hidden h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 sm:block" aria-label={`Open profile for ${firstName}`}>
-                <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
+              <button onClick={() => onNavigate('profile')} className="hidden h-10 w-10 overflow-hidden rounded-full border border-slate-200 bg-slate-100 sm:flex items-center justify-center" aria-label={`Open profile for ${firstName}`}>
+                {profile.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement?.classList.add('text-sky-800'); }} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-sm font-semibold text-sky-800">{firstName.charAt(0).toUpperCase()}</span>
+                )}
               </button>
             </>
           ) : (
