@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, Calendar, User, Phone, Search, Check, Sparkles, MapPin, School, BookOpen } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { UserProfile } from '../types';
-import { sampleSchools, sampleBoards, sampleClasses, sampleInterestsList } from '../data/mockData';
+import { sampleSchools, sampleBoards, sampleClasses, interestGroups } from '../data/mockData';
 
 interface OnboardingWizardProps {
   initialProfile: UserProfile;
@@ -19,7 +19,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   const totalSteps = 6;
 
   const [formData, setFormData] = useState<UserProfile>({ ...initialProfile });
-  const [schoolQuery, setSchoolQuery] = useState<string>(initialProfile.schoolName || 'D');
+  const [schoolQuery, setSchoolQuery] = useState<string>(initialProfile.schoolName || '');
   const [showSchoolDropdown, setShowSchoolDropdown] = useState<boolean>(false);
 
   const filteredSchools = sampleSchools.filter((school) =>
@@ -27,6 +27,18 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
   );
 
   const handleNext = () => {
+    if (currentStep === 1 && !formData.fullName.trim()) {
+      alert('Please enter your full name to continue.');
+      return;
+    }
+    if (currentStep === 2 && !formData.currentClass) {
+      alert('Please select your current class / education level.');
+      return;
+    }
+    if (currentStep === 5 && formData.interests.length === 0) {
+      alert('Select at least one interest so NextMarga can personalize opportunities.');
+      return;
+    }
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1);
     } else {
@@ -437,25 +449,33 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2.5">
-              {sampleInterestsList.map((interest) => {
-                const isSelected = formData.interests.includes(interest);
-                return (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => toggleInterest(interest)}
-                    className={`px-4 py-2.5 rounded-lg text-xs font-mono uppercase tracking-wider border transition-all flex items-center gap-2 ${
-                      isSelected
-                        ? 'bg-sky-700 text-white border-[#F5F2ED] shadow-sm'
-                        : 'bg-white text-slate-700 border-slate-200 hover:border-white/30 hover:text-slate-950'
-                    }`}
-                  >
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
-                    <span>{interest}</span>
-                  </button>
-                );
-              })}
+            <div className="space-y-5">
+              {Object.entries(interestGroups).map(([group, interests]) => (
+                <div key={group}>
+                  <div className="mb-2 text-xs font-semibold text-slate-900">{group}</div>
+                  <div className="flex flex-wrap gap-2">
+                    {interests.map((interest) => {
+                      const isSelected = formData.interests.includes(interest);
+                      return (
+                        <button
+                          key={interest}
+                          type="button"
+                          onClick={() => toggleInterest(interest)}
+                          className={`px-3 py-2 rounded-lg text-[11px] border transition-all flex items-center gap-1.5 ${
+                            isSelected
+                              ? 'bg-sky-700 text-white border-sky-700 shadow-sm'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-sky-300 hover:text-slate-950'
+                          }`}
+                        >
+                          {isSelected && <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
+                          <span>{interest}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <p className="text-[11px] text-slate-500">Choose as many as you like. These interests are used to rank scholarships, internships, competitions, research, jobs and other opportunities.</p>
             </div>
           </div>
         )}
