@@ -1,6 +1,8 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
 import { initialProfile, sampleOpportunities, sampleNotifications, sampleApplications } from './data/mockData';
+
+const emptyProfile: UserProfile = { fullName: '', dob: '', gender: '', phone: '', fatherName: '', motherName: '', guardianPhone: '', schoolName: '', currentClass: '', educationalBoard: '', state: '', city: '', interests: [], targetPath: '', avatarUrl: '' };
 import { TopHeader } from './components/TopHeader';
 import { BottomNav } from './components/BottomNav';
 import { LandingScreen } from './components/LandingScreen';
@@ -86,8 +88,8 @@ export function App() {
       setProfile(getCachedProfile(user.id));
       const remoteProfile = await getUserProfile();
       await loadUserData();
-      if (remoteProfile && remoteProfile.fullName.trim()) { setProfile(remoteProfile); setCurrentScreen('home'); await loadOpportunities(remoteProfile); }
-      else setCurrentScreen('onboarding');
+      if (remoteProfile && remoteProfile.fullName.trim() && remoteProfile.currentClass) { setProfile(remoteProfile); setCurrentScreen('home'); await loadOpportunities(remoteProfile); }
+      else { const freshProfile = { ...emptyProfile }; setProfile(freshProfile); setCurrentScreen('onboarding'); }
     } catch (error) { console.error(error); setAppError(error instanceof Error ? error.message : 'Could not load your account.'); }
   }, [loadOpportunities, loadUserData]);
 
