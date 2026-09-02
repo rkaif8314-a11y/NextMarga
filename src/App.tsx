@@ -10,7 +10,7 @@ import { LegalScreen } from './components/LegalScreen';
 import { supabase } from './lib/supabase';
 import { signOut } from './lib/auth';
 import { getUserProfile, saveUserProfile } from './lib/profile';
-import { getPersonalizedOpportunities, getOpportunityById } from './lib/opportunities';
+import { getPersonalizedOpportunities, getOpportunityById, getVerifiedOpportunities } from './lib/opportunities';
 import { getSavedOpportunityIds, toggleSavedOpportunity, getMyApplications, applyToOpportunity, updateApplicationStatus } from './lib/applications';
 import { getMyNotifications, getDeadlineNotifications, markAllNotificationsRead, markNotificationRead } from './lib/notifications';
 import { syncMyRoadmapWithProfile } from './lib/roadmap';
