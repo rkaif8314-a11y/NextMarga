@@ -104,7 +104,7 @@ export function App() {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(async ({ data: { session } }) => { if (!active) return; if (session?.user) await loadAuthenticatedUser(); if (active) setAuthLoading(false); });
+    supabase.auth.getSession().then(async ({ data: { session } }) => { if (!active) return; try { const publicOpportunities = await getVerifiedOpportunities(1000); if (active && publicOpportunities.length) { setOpportunities(publicOpportunities); setSelectedOpportunity(publicOpportunities[0]); } } catch (error) { console.warn('Public opportunity catalog unavailable:', error); } if (session?.user) await loadAuthenticatedUser(); if (active) setAuthLoading(false); });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === 'SIGNED_IN' && session?.user) window.setTimeout(() => { if (active) void loadAuthenticatedUser(); }, 0);
