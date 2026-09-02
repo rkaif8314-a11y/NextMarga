@@ -41,32 +41,19 @@ export const sampleBoards = [
 ];
 
 export const sampleClasses = [
-  "Class 6",
-  "Class 7",
-  "Class 8",
-  "Class 9",
-  "Class 10",
-  "Class 11",
-  "Class 12",
-  "Undergraduate (1st/2nd Year)",
-  "Undergraduate (3rd/4th Year)",
-  "Postgraduate / PhD"
+  "Class 6","Class 7","Class 8","Class 9","Class 10","Class 11","Class 12",
+  "Undergraduate (1st Year)","Undergraduate (2nd Year)","Undergraduate (3rd Year)","Undergraduate (4th Year)",
+  "Postgraduate (1st Year)","Postgraduate (2nd Year)","PhD / Doctoral"
 ];
 
-export const sampleInterestsList = [
-  "Mathematics",
-  "Coding",
-  "Science",
-  "Robotics",
-  "Physics",
-  "Astronomy",
-  "Biology & Medicine",
-  "Economics",
-  "Debate & Public Speaking",
-  "Design & UI/UX",
-  "Artificial Intelligence",
-  "Creative Writing"
-];
+export const interestGroups: Record<string, string[]> = {
+  "STEM & Computing": ["Mathematics","Physics","Chemistry","Biology","Astronomy","Computer Science","Coding","Web Development","App Development","Artificial Intelligence","Machine Learning","Data Science","Cybersecurity","Robotics","Electronics","IoT","Space Science","Environmental Science"],
+  "Business & Social Sciences": ["Economics","Commerce","Finance","Entrepreneurship","Business","Marketing","Management","Law","Political Science","International Relations","Psychology","Sociology","Geography","History","Public Policy","Civil Services"],
+  "Creative & Media": ["Design & UI/UX","Graphic Design","Animation","3D Design","Architecture","Photography","Film & Video","Content Creation","Creative Writing","Journalism","Music","Dance","Theatre","Debate & Public Speaking"],
+  "Health & Life Sciences": ["Medicine","Biotechnology","Biochemistry","Life Sciences","Nutrition","Public Health","Neuroscience","Pharmacy","Dentistry","Veterinary Science"],
+  "Skills, Sports & Service": ["Sports","Athletics","Chess","Esports","Fitness","Leadership","Volunteering","Social Impact","Sustainability","Climate Action","Languages","Teaching","Research","Innovation","General Aptitude"]
+};
+export const sampleInterestsList = Object.values(interestGroups).flat();
 
 export const sampleOpportunities: Opportunity[] = [
   {
