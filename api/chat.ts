@@ -15,7 +15,10 @@ type ChatBody = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
   });
 
 export default async function handler(req: Request) {
@@ -32,21 +35,27 @@ export default async function handler(req: Request) {
   try {
     const body = (await req.json()) as ChatBody;
     const profile = body.profile ?? {};
+    const message = typeof body.message === 'string' ? body.message.trim() : '';
+
+    if (message.length > 6000) {
+      return json({ error: 'Message is too long.' }, 400);
+    }
+
     const profileSummary = [
       `Name: ${profile.fullName || 'Student'}`,
       `Class/Level: ${profile.currentClass || 'Student'}`,
       `Board: ${profile.educationalBoard || 'Not specified'}`,
       `Location: ${[profile.city, profile.state].filter(Boolean).join(', ') || 'India'}`,
-      `Interests: ${(profile.interests || []).join(', ') || 'STEM'}`,
+      `Interests: ${(profile.interests || []).slice(0, 12).join(', ') || 'STEM'}`,
       `Goal: ${profile.targetPath || 'Career exploration'}`,
     ].join('\n');
 
     const system = `You are NextMarga CareerAI, a precise and encouraging opportunity advisor for students and early-career learners.\n\nStudent profile:\n${profileSummary}\n\nGive practical, age-appropriate guidance about scholarships, competitions, internships, hackathons, research, entrance exams, skills, and career roadmaps. Never invent deadlines or eligibility. When current dates or eligibility matter, tell the user to verify the official organizer source. Use concise headings and bullets.`;
 
-    const history = (body.conversationHistory || []).slice(-8).map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
+    const history = (body.conversationHistory || [])
+      .filter((item) => (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')
+      .slice(-8)
+      .map((item) => ({ role: item.role, content: item.content.slice(0, 6000) }));
 
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -55,9 +64,9 @@ export default async function handler(req: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5.6',
+        model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
         instructions: system,
-        input: [...history, { role: 'user', content: body.message || 'What opportunities should I prepare for next?' }],
+        input: [...history, { role: 'user', content: message || 'What opportunities should I prepare for next?' }],
         max_output_tokens: 900,
       }),
     });
