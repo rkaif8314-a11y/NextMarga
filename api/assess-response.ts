@@ -7,7 +7,10 @@ type Body = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
   });
 
 const fallback = {
@@ -25,12 +28,14 @@ export default async function handler(req: Request) {
 
   try {
     const body = (await req.json()) as Body;
-    if (!body.responseText?.trim()) return json(fallback);
+    const responseText = typeof body.responseText === 'string' ? body.responseText.trim() : '';
+    if (!responseText) return json(fallback);
+    if (responseText.length > 8000) return json({ error: 'Assessment response is too long.' }, 400);
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return json(fallback);
 
-    const prompt = `Evaluate this student's assessment answer. Return ONLY valid JSON with exactly these fields: score (number 75-98), feedback (string), strengths (array of exactly 2 strings), improvementTip (string). Be encouraging and specific.\n\nQuestion: ${body.question || 'Tell us about a difficult problem you solved and how you solved it.'}\nStudent level: ${body.profile?.currentClass || 'Student'}\nAnswer: ${body.responseText}`;
+    const prompt = `Evaluate this student's assessment answer. Return ONLY valid JSON with exactly these fields: score (number 75-98), feedback (string), strengths (array of exactly 2 strings), improvementTip (string). Be encouraging and specific.\n\nQuestion: ${(body.question || 'Tell us about a difficult problem you solved and how you solved it.').slice(0, 3000)}\nStudent level: ${(body.profile?.currentClass || 'Student').slice(0, 100)}\nAnswer: ${responseText}`;
 
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
@@ -39,7 +44,7 @@ export default async function handler(req: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: process.env.OPENAI_MODEL || 'gpt-5.6',
+        model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
         input: prompt,
         max_output_tokens: 500,
       }),
