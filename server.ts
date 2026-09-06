@@ -9,22 +9,29 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(express.json({ limit: "64kb" }));
+app.use((_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
+
+const MAX_CHAT_MESSAGE = 6000;
+const MAX_ASSESSMENT_RESPONSE = 8000;
+const MAX_PROFILE_FIELD = 200;
+
+function text(value: unknown, maxLength = MAX_PROFILE_FIELD): string {
+  return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
+}
 
 // Lazy-initialize Gemini AI client
 let aiClient: GoogleGenAI | null = null;
 function getGeminiClient(): GoogleGenAI | null {
-  if (!process.env.GEMINI_API_KEY) {
-    return null;
-  }
+  if (!process.env.GEMINI_API_KEY) return null;
   if (!aiClient) {
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
+      httpOptions: { headers: { "User-Agent": "aistudio-build" } },
     });
   }
   return aiClient;
@@ -38,63 +45,68 @@ app.get("/api/health", (_req, res) => {
 // Career AI chat endpoint
 app.post("/api/chat", async (req, res) => {
   try {
-    const { message, profile, conversationHistory } = req.body;
+    const message = text(req.body?.message, MAX_CHAT_MESSAGE);
+    if (typeof req.body?.message !== "undefined" && !message) {
+      return res.status(400).json({ error: "Message must be a non-empty string." });
+    }
+
+    const rawProfile = req.body?.profile && typeof req.body.profile === "object" ? req.body.profile : null;
+    const profile = rawProfile
+      ? {
+          fullName: text(rawProfile.fullName),
+          currentClass: text(rawProfile.currentClass, 50),
+          educationalBoard: text(rawProfile.educationalBoard, 100),
+          state: text(rawProfile.state, 100),
+          city: text(rawProfile.city, 100),
+          interests: Array.isArray(rawProfile.interests)
+            ? rawProfile.interests.filter((item: unknown): item is string => typeof item === "string").slice(0, 12).map((item: string) => text(item, 80))
+            : [],
+          targetPath: text(rawProfile.targetPath, 150),
+        }
+      : null;
 
     const userProfileSummary = profile
-      ? `Student Profile Context:
-- Name: ${profile.fullName || 'Student'}
-- Class/Grade: ${profile.currentClass || 'Class 8/9'}
-- Board: ${profile.educationalBoard || 'CBSE'}
-- State/Location: ${profile.state || 'India'} (${profile.city || ''})
-- Interests: ${(profile.interests || ['Mathematics', 'Coding']).join(', ')}
-- Goal: ${profile.targetPath || 'Engineering & Research'}`
-      : 'Student in secondary/senior secondary school in India.';
+      ? `Student Profile Context:\n- Name: ${profile.fullName || "Student"}\n- Class/Grade: ${profile.currentClass || "Class 8/9"}\n- Board: ${profile.educationalBoard || "CBSE"}\n- State/Location: ${profile.state || "India"} (${profile.city || ""})\n- Interests: ${(profile.interests.length ? profile.interests : ["Mathematics", "Coding"]).join(", ")}\n- Goal: ${profile.targetPath || "Engineering & Research"}`
+      : "Student in secondary/senior secondary school in India.";
 
     const systemInstruction = `You are NextMarga CareerAI, a friendly, encouraging, and highly knowledgeable student counselor and opportunity advisor for school and college students (from Class 6-8, 9-10, 11-12, through Undergrad).
-Your mission is to guide students on Olympiads (e.g. Mathematics Olympiad, IOI, ZIO, NSEJS, PRMO/RMO), National & State Scholarships (e.g. NTSE, INSPIRE, State Merit), Entrance Exams (JEE, NEET, CUET, SAT), Research Fellowships, Hackathons, and step-by-step career roadmaps.
+Your mission is to guide students on Olympiads, scholarships, entrance exams, research fellowships, hackathons, and step-by-step career roadmaps.
 
-Context:
-${userProfileSummary}
+Context:\n${userProfileSummary}
 
 Rules:
 1. Provide structured, actionable, and age-appropriate guidance.
-2. If relevant, recommend 2-3 specific real competitions, scholarships, or preparatory milestones.
+2. If relevant, recommend 2-3 specific real opportunities or preparatory milestones.
 3. Keep the tone inspiring, precise, and supportive. Avoid generic fluff.
-4. Format with clean bullet points and clear next steps.`;
+4. Format with clean bullet points and clear next steps.
+5. Do not claim an opportunity, deadline, award amount, or eligibility rule is current unless it has been verified from an official source.`;
 
     const ai = getGeminiClient();
     if (ai) {
       const chat = ai.chats.create({
         model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-        },
+        config: { systemInstruction, temperature: 0.7 },
       });
-
-      // Send the user message
       const result = await chat.sendMessage({ message: message || "What opportunities should I prepare for next?" });
       return res.json({ reply: result.text });
-    } else {
-      // Fallback smart rule-based counselor when API key is not yet set
-      const msg = (message || '').toLowerCase();
-      let fallbackReply = "";
-      if (msg.includes("class 9") || msg.includes("coding") || msg.includes("python")) {
-        fallbackReply = `Based on your profile, build a strong coding foundation first.\n\nSuggested next steps:\n1. Learn Python fundamentals and problem solving.\n2. Explore the current Informatics Olympiad pathway and check the official eligibility page before applying.\n3. Build 1-2 small projects and practice algorithms regularly.\n\n**Next step:** Open your Roadmap and choose one coding milestone for this month.`;
-      } else if (msg.includes("olympiad") || msg.includes("math")) {
-        fallbackReply = `For Mathematics & Science Olympiads:\n\n1. Strengthen Number Theory, Geometry, Algebra and Combinatorics.\n2. Check the current official Olympiad calendar for your class and age.\n3. Practice previous official papers and use your Roadmap to set weekly milestones.\n\n**Pro-tip:** Always verify current registration dates and eligibility on the official organizer website before applying.`;
-      } else if (msg.includes("scholarship") || msg.includes("bihar") || msg.includes("fund")) {
-        fallbackReply = `Here are active scholarship programs matching your profile:\n\n1. **State Merit Scholarship (Bihar)**: Financial support for students excelling in STEM.\n2. **National Means-cum-Merit Scholarship (NMMS)**: ₹12,000/year assistance for qualifying Class 8 students.\n3. **INSPIRE-SHE Awards**: Science & Technology fellowship for bright young scholars.\n\nMake sure your School Bonafide Certificate and Previous Marksheets are uploaded in your NextMarga profile!`;
-      } else {
-        fallbackReply = `Great question! Based on your academic journey in ${profile?.currentClass || 'Class 8-12'}:\n\n- **Immediate Focus**: Consolidate core concepts and tackle 1-2 recognized Olympiads or talent exams.\n- **Skill Building**: Dedicate 45 minutes daily to your passion area (${(profile?.interests || ['STEM'])[0]}).\n- **Milestone Tracking**: Check your personalized Roadmap tab to stay ahead of upcoming application deadlines.\n\nWould you like recommendations for specific competitions, exam dates, or study resources?`;
-      }
-      return res.json({ reply: fallbackReply });
     }
-  } catch (error: any) {
+
+    const msg = message.toLowerCase();
+    let fallbackReply = "";
+    if (msg.includes("class 9") || msg.includes("coding") || msg.includes("python")) {
+      fallbackReply = `Based on your profile, build a strong coding foundation first.\n\nSuggested next steps:\n1. Learn Python fundamentals and problem solving.\n2. Explore the current Informatics Olympiad pathway and check the official eligibility page before applying.\n3. Build 1-2 small projects and practice algorithms regularly.\n\n**Next step:** Open your Roadmap and choose one coding milestone for this month.`;
+    } else if (msg.includes("olympiad") || msg.includes("math")) {
+      fallbackReply = `For Mathematics & Science Olympiads:\n\n1. Strengthen Number Theory, Geometry, Algebra and Combinatorics.\n2. Check the current official Olympiad calendar for your class and age.\n3. Practice previous official papers and use your Roadmap to set weekly milestones.\n\n**Pro-tip:** Always verify current registration dates and eligibility on the official organizer website before applying.`;
+    } else if (msg.includes("scholarship") || msg.includes("fund")) {
+      fallbackReply = `For scholarships and financial support:\n\n1. Check official national, state, school and institution scholarship portals for opportunities matching your eligibility.\n2. Compare the current eligibility rules, deadlines and required documents before applying.\n3. Keep marksheets, identity documents and bonafide/enrollment proof ready where required.\n\n**Important:** Scholarship amounts and deadlines change, so verify them on the official organizer or government website.`;
+    } else {
+      fallbackReply = `Great question! Based on your academic journey in ${profile?.currentClass || "Class 8-12"}:\n\n- **Immediate Focus**: Consolidate core concepts and tackle 1-2 recognized Olympiads or talent exams.\n- **Skill Building**: Dedicate focused daily time to your passion area (${profile?.interests?.[0] || "STEM"}).\n- **Milestone Tracking**: Check your personalized Roadmap tab to stay ahead of upcoming application deadlines.\n\nWould you like recommendations for specific competitions, exam dates, or study resources?`;
+    }
+    return res.json({ reply: fallbackReply });
+  } catch (error: unknown) {
     console.error("Error in /api/chat:", error);
-    const profileClass = req.body?.profile?.currentClass || "your current class";
     return res.json({
-      reply: `CareerAI is currently running in demo mode. For ${profileClass}, focus on opportunities that match your eligibility, check official sources for current dates, and use the Roadmap tab to plan your next steps.`,
+      reply: "CareerAI is currently running in demo mode. Focus on opportunities that match your eligibility, verify current dates on official sources, and use the Roadmap tab to plan your next steps.",
       demoMode: true,
     });
   }
@@ -103,20 +115,20 @@ Rules:
 // Assessment evaluation endpoint
 app.post("/api/assess-response", async (req, res) => {
   try {
-    const { question, responseText, profile } = req.body;
+    const question = text(req.body?.question, 3000);
+    const responseText = text(req.body?.responseText, MAX_ASSESSMENT_RESPONSE);
+    const studentClass = text(req.body?.profile?.currentClass, 50);
+
+    if (typeof req.body?.responseText !== "undefined" && !responseText) {
+      return res.status(400).json({ error: "responseText must be a non-empty string." });
+    }
+    if (responseText.length > MAX_ASSESSMENT_RESPONSE) {
+      return res.status(413).json({ error: "Assessment response is too long." });
+    }
+
     const ai = getGeminiClient();
-
-    if (ai && responseText && responseText.trim().length > 10) {
-      const prompt = `Evaluate the following student's response to an assessment question:
-Question: "${question || 'Tell us about a time you solved a difficult problem. Walk us through your thought process and the outcome.'}"
-Student Answer: "${responseText}"
-Student Level: ${profile?.currentClass || 'Class 8-12'}
-
-Please return a concise JSON analysis with:
-1. "score": number between 75 and 98
-2. "feedback": brief 2-sentence encouraging review of their analytical structure and problem-solving method
-3. "strengths": array of 2 bullet points
-4. "improvementTip": 1 actionable suggestion to elevate their response`;
+    if (ai && responseText.length > 10) {
+      const prompt = `Evaluate the following student's response to an assessment question:\nQuestion: "${question || "Tell us about a time you solved a difficult problem. Walk us through your thought process and the outcome."}"\nStudent Answer: "${responseText}"\nStudent Level: ${studentClass || "Class 8-12"}\n\nPlease return a concise JSON analysis with:\n1. "score": number between 75 and 98\n2. "feedback": brief 2-sentence encouraging review of their analytical structure and problem-solving method\n3. "strengths": array of 2 bullet points\n4. "improvementTip": 1 actionable suggestion to elevate their response`;
 
       const result = await ai.models.generateContent({
         model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
@@ -128,26 +140,28 @@ Please return a concise JSON analysis with:
         const jsonMatch = raw.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          return res.json(parsed);
+          if (typeof parsed.score === "number") parsed.score = Math.min(98, Math.max(75, Math.round(parsed.score)));
+          if (typeof parsed.feedback === "string" && Array.isArray(parsed.strengths) && typeof parsed.improvementTip === "string") {
+            return res.json(parsed);
+          }
         }
-      } catch (e) {
-        // Fallback to text parsing
+      } catch {
+        // Fall back to constructive feedback below.
       }
     }
 
-    // Default constructive feedback
-    res.json({
+    return res.json({
       score: 88,
       feedback: "Strong structured breakdown! You clearly articulated the root problem, demonstrated systematic thinking, and reflected well on the outcome.",
       strengths: [
         "Logical sequencing from problem identification to resolution",
-        "Clear demonstration of resilience and analytical curiosity"
+        "Clear demonstration of resilience and analytical curiosity",
       ],
-      improvementTip: "Consider quantifying your final outcome (e.g., time saved, accuracy percentage, or score improvement) for even stronger impact."
+      improvementTip: "Consider quantifying your final outcome (e.g., time saved, accuracy percentage, or score improvement) for even stronger impact.",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in /api/assess-response:", error);
-    res.status(500).json({ error: error.message || "Assessment evaluation failed" });
+    return res.status(500).json({ error: "Assessment evaluation failed" });
   }
 });
 
@@ -159,10 +173,10 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
 
