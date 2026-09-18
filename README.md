@@ -82,6 +82,31 @@ Logout
 
 ---
 
+## 🏗️ Architecture Overview
+
+NextMarga separates the student-facing UI from server-side AI operations and persistent data access.
+
+```text
+React + TypeScript UI
+        │
+        ├── Profile / Explore / Applications / Roadmap
+        │
+        └── CareerAI requests
+                 │
+                 ▼
+          Server API boundary
+                 │
+          ┌──────┴──────┐
+          ▼             ▼
+      Gemini AI      Supabase
+                       │
+                Auth + application data
+```
+
+The server boundary is responsible for validating request payloads before forwarding supported inputs to external AI services. Client code should never contain service-role credentials or private API keys.
+
+---
+
 ## 🛠️ Technology Stack
 
 | Layer | Technology |
@@ -168,6 +193,19 @@ The production application is deployed through Vercel and connected to the proje
 - Use environment variables for production secrets.
 - Keep Supabase Row Level Security enabled for protected data.
 - Verify opportunity information and eligibility against official sources before applying.
+
+---
+
+## 🧪 Development Checks
+
+Before opening a pull request, run the project's dependency installation and production build locally:
+
+```bash
+npm install
+npm run build
+```
+
+When changing API request handling, also manually exercise the affected success and validation paths. Inputs coming from forms or network requests should be treated as untrusted and tested with empty, malformed, and unexpectedly long values.
 
 ---
 
