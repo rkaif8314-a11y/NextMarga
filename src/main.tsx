@@ -6,7 +6,13 @@ import { registerPWA } from './pwa';
 
 registerPWA();
 
-createRoot(document.getElementById('root')!).render(
+const rootElement = document.getElementById('root');
+
+if (!rootElement) {
+  throw new Error('NextMarga root element was not found. Check index.html for #root.');
+}
+
+createRoot(rootElement).render(
   <StrictMode>
     <App />
   </StrictMode>,
