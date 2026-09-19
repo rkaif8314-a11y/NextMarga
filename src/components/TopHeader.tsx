@@ -14,7 +14,7 @@ const publicNav: { label: string; screen: AppScreen }[] = [
   { label: 'Opportunities', screen: 'explore' },
   { label: 'Roadmap', screen: 'roadmap' },
   { label: 'Applications', screen: 'applications' },
-  { label: 'CareerAI', screen: 'assessment' },
+  { label: 'Marga', screen: 'marga' },
   { label: 'About', screen: 'support' },
 ];
 
