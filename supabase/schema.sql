@@ -38,6 +38,49 @@ create index if not exists opportunities_verified_idx on public.opportunities(is
 create index if not exists opportunities_status_idx on public.opportunities(status);
 create index if not exists opportunities_source_idx on public.opportunities(source_name);
 
+-- Global catalog fields used by the application search layer.
+alter table public.opportunities
+  add column if not exists countries text[] not null default '{}',
+  add column if not exists regions text[] not null default '{}',
+  add column if not exists opportunity_status text not null default 'active',
+  add column if not exists source_type text not null default 'official',
+  add column if not exists last_verified_at timestamptz,
+  add column if not exists application_url text,
+  add column if not exists provider_type text;
+
+create index if not exists opportunities_countries_idx on public.opportunities using gin(countries);
+create index if not exists opportunities_regions_idx on public.opportunities using gin(regions);
+create index if not exists opportunities_opportunity_status_idx on public.opportunities(opportunity_status);
+
+update public.opportunities
+set countries = array['IN']
+where cardinality(countries) = 0 and is_verified = true;
+
+update public.opportunities
+set last_verified_at = coalesce(last_verified_at, verified_at, now())
+where is_verified = true;
+
+alter table public.opportunities drop constraint if exists opportunities_opportunity_status_check;
+alter table public.opportunities add constraint opportunities_opportunity_status_check
+  check (opportunity_status in ('active','upcoming','closed','rolling','seasonal','archived','info_only'));
+
+create table if not exists public.opportunity_source_catalog (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  source_key text not null unique,
+  base_url text not null,
+  category text,
+  country_scope text[] not null default '{}',
+  source_type text not null default 'official',
+  active boolean not null default true,
+  extraction_method text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists opportunity_source_catalog_active_idx on public.opportunity_source_catalog(active);
+create index if not exists opportunity_source_catalog_category_idx on public.opportunity_source_catalog(category);
+
+
 create table if not exists public.applications (
   id uuid primary key default gen_random_uuid(), user_id uuid not null references auth.users(id) on delete cascade,
   opportunity_id uuid references public.opportunities(id) on delete cascade,
@@ -105,6 +148,7 @@ create trigger on_auth_user_created after insert on auth.users for each row exec
 alter table public.profiles enable row level security;
 alter table public.schools enable row level security;
 alter table public.opportunities enable row level security;
+alter table public.opportunity_source_catalog enable row level security;
 alter table public.applications enable row level security;
 alter table public.application_status_history enable row level security;
 alter table public.application_documents enable row level security;
@@ -121,6 +165,8 @@ drop policy if exists "Anyone can read schools" on public.schools;
 create policy "Anyone can read schools" on public.schools for select using (true);
 drop policy if exists "Anyone can read verified opportunities" on public.opportunities;
 create policy "Anyone can read verified opportunities" on public.opportunities for select using (is_verified = true);
+drop policy if exists "Anyone can read active opportunity sources" on public.opportunity_source_catalog;
+create policy "Anyone can read active opportunity sources" on public.opportunity_source_catalog for select using (active = true);
 drop policy if exists "Users manage own applications" on public.applications;
 create policy "Users manage own applications" on public.applications for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "Users manage own application status history" on public.application_status_history;
