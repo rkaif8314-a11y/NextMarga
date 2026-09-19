@@ -1,8 +1,24 @@
+import { createClient } from '@supabase/supabase-js';
+
 type Body = {
   question?: string;
   responseText?: string;
   profile?: { currentClass?: string };
 };
+
+
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+const authClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+async function isAuthenticated(req: Request) {
+  if (!authClient) return false;
+  const authorization = req.headers.get('authorization') || '';
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
+  if (!token) return false;
+  const { data, error } = await authClient.auth.getUser(token);
+  return !error && Boolean(data.user);
+}
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -25,6 +41,7 @@ const fallback = {
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (!(await isAuthenticated(req))) return json({ error: 'Authentication required.' }, 401);
 
   try {
     const body = (await req.json()) as Body;
