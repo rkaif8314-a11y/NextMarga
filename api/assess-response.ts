@@ -29,16 +29,6 @@ const json = (body: unknown, status = 200) =>
     },
   });
 
-const fallback = {
-  score: 88,
-  feedback: 'Strong structured breakdown. You clearly explained the problem and showed a logical approach to solving it.',
-  strengths: [
-    'Logical sequencing from problem identification to resolution',
-    'Clear demonstration of analytical thinking and reflection',
-  ],
-  improvementTip: 'Add a measurable outcome or concrete example to make the answer even stronger.',
-};
-
 export default async function handler(req: Request) {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   if (!(await isAuthenticated(req))) return json({ error: 'Authentication required.' }, 401);
