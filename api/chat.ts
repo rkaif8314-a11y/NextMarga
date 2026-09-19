@@ -21,13 +21,13 @@ const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABA
 const authClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 async function requireUser(req: Request) {
-  if (!authClient) throw new Error('Server authentication is not configured.');
+  if (!authClient) return null;
   const authorization = req.headers.get('authorization') || '';
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
   if (!token) return null;
   const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) return null;
-  return data.user;
+  return { user: data.user, token };
 }
 
 function findOpportunityIds(message: string, opportunities: ChatBody['opportunities'] = []) {
@@ -58,8 +58,8 @@ export default async function handler(req: Request) {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
 
   if (!authClient) return json({ error: 'Server authentication is not configured.' }, 503);
-  const user = await requireUser(req);
-  if (!user) return json({ error: 'Authentication required.' }, 401);
+  const auth = await requireUser(req);
+  if (!auth) return json({ error: 'Authentication required.' }, 401);
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -71,8 +71,17 @@ export default async function handler(req: Request) {
 
   try {
     const body = (await req.json()) as ChatBody;
-    const profile = body.profile ?? {};
+    const bodyProfile = body.profile ?? {};
     const opportunities = Array.isArray(body.opportunities) ? body.opportunities.slice(0, 12) : [];
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${auth.token}` } } });
+    const [profileResult, applicationResult, roadmapResult] = await Promise.all([
+      userClient.from('profiles').select('full_name,current_class,educational_board,state,city,interests,target_path').eq('id', auth.user.id).maybeSingle(),
+      userClient.from('applications').select('status,opportunity_id,applied_date').eq('user_id', auth.user.id).order('updated_at', { ascending: false }).limit(20),
+      userClient.from('roadmap_phases').select('phase,title,description,roadmap_goals(text,completed)').eq('user_id', auth.user.id).order('sort_order'),
+    ]);
+    const profile = profileResult.data ?? bodyProfile;
+    const applicationSummary = (applicationResult.data ?? []).map((item) => `${item.status}: ${item.opportunity_id || 'opportunity'}`).join(', ') || 'No tracked applications';
+    const roadmapSummary = (roadmapResult.data ?? []).map((phase) => `${phase.phase}: ${phase.title} (${(phase.roadmap_goals ?? []).filter((goal: { completed: boolean }) => goal.completed).length} completed goals)`).join('; ') || 'No roadmap created';
     const message = typeof body.message === 'string' ? body.message.trim() : '';
 
     if (message.length > 6000) {
@@ -85,7 +94,9 @@ export default async function handler(req: Request) {
       `Board: ${profile.educationalBoard || 'Not specified'}`,
       `Location: ${[profile.city, profile.state].filter(Boolean).join(', ') || 'India'}`,
       `Interests: ${(profile.interests || []).slice(0, 12).join(', ') || 'STEM'}`,
-      `Goal: ${profile.targetPath || 'Career exploration'}`,
+      `Goal: ${profile.target_path || profile.targetPath || 'Career exploration'}`,
+      `Tracked applications: ${applicationSummary}`,
+      `Roadmap: ${roadmapSummary}`,
     ].join('\n');
 
     const opportunityContext = opportunities.length
