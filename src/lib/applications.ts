@@ -12,14 +12,27 @@ export async function getSavedOpportunityIds(): Promise<string[]> {
 export async function toggleSavedOpportunity(opportunityId: string): Promise<boolean> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Please sign in to save opportunities.');
-  const { data: existing, error: lookupError } = await supabase.from('applications').select('id').eq('user_id', user.id).eq('opportunity_id', opportunityId).eq('status', 'Saved').maybeSingle();
+  const { data: existing, error: lookupError } = await supabase
+    .from('applications')
+    .select('id,status')
+    .eq('user_id', user.id)
+    .eq('opportunity_id', opportunityId)
+    .maybeSingle();
   if (lookupError) throw new Error(lookupError.message);
-  if (existing) {
+
+  if (existing?.status === 'Saved') {
     const { error } = await supabase.from('applications').delete().eq('id', existing.id).eq('user_id', user.id);
     if (error) throw new Error(error.message);
     return false;
   }
-  const { error } = await supabase.from('applications').upsert({ user_id: user.id, opportunity_id: opportunityId, status: 'Saved' }, { onConflict: 'user_id,opportunity_id' });
+
+  // Never overwrite an active application merely because a student clicks Save.
+  // Saved and tracked applications currently share the application record.
+  if (existing) {
+    throw new Error('This opportunity is already tracked as an application. Update it from Applications instead.');
+  }
+
+  const { error } = await supabase.from('applications').insert({ user_id: user.id, opportunity_id: opportunityId, status: 'Saved' });
   if (error) throw new Error(error.message);
   return true;
 }
