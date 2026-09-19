@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
-import { initialProfile, sampleOpportunities, sampleNotifications, sampleApplications } from './data/mockData';
+import { initialProfile, sampleNotifications, sampleApplications } from './data/mockData';
 
 const emptyProfile: UserProfile = { fullName: '', dob: '', gender: '', phone: '', fatherName: '', motherName: '', guardianPhone: '', schoolName: '', currentClass: '', educationalBoard: '', state: '', city: '', interests: [], targetPath: '', avatarUrl: '' };
 import { TopHeader } from './components/TopHeader';
@@ -27,17 +27,17 @@ const NotificationsScreen = lazy(() => import('./components/NotificationsScreen'
 const ProfileScreen = lazy(() => import('./components/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
 const SettingsScreen = lazy(() => import('./components/SettingsScreen').then((m) => ({ default: m.SettingsScreen })));
 
-const protectedScreens: AppScreen[] = ['home', 'roadmap', 'applications', 'assessment', 'notifications', 'profile'];
+const protectedScreens: AppScreen[] = ['home', 'explore', 'roadmap', 'applications', 'assessment', 'marga', 'notifications', 'profile', 'settings'];
 const ScreenLoader = () => <div className="min-h-[45vh] flex items-center justify-center"><div className="text-center"><div className="text-[10px] uppercase tracking-[0.3em] text-white/35">NextMarga</div><div className="mt-2 text-xs text-white/45">Loading…</div></div></div>;
 
 function getCachedProfile(userId: string): UserProfile {
   try {
     const cached = localStorage.getItem(`nextmarga_profile_${userId}`);
-    if (!cached) return initialProfile;
+    if (!cached) return emptyProfile;
     const parsed = JSON.parse(cached);
     if (parsed && typeof parsed === 'object' && typeof parsed.fullName === 'string') return parsed as UserProfile;
   } catch {}
-  return initialProfile;
+  return emptyProfile;
 }
 
 export function App() {
@@ -47,12 +47,12 @@ export function App() {
   const [appError, setAppError] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [authUserId, setAuthUserId] = useState('');
-  const [profile, setProfile] = useState<UserProfile>(initialProfile);
-  const [opportunities, setOpportunities] = useState<Opportunity[]>(sampleOpportunities);
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity>(sampleOpportunities[0]);
+  const [profile, setProfile] = useState<UserProfile>(emptyProfile);
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [savedOpportunityIds, setSavedOpportunityIds] = useState<string[]>([]);
-  const [notifications, setNotifications] = useState<AppNotification[]>(sampleNotifications);
-  const [applications, setApplications] = useState<ApplicationItem[]>(sampleApplications);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [applications, setApplications] = useState<ApplicationItem[]>([]);
 
   const navigate = useCallback(async (screen: AppScreen) => {
     if (!protectedScreens.includes(screen)) { setCurrentScreen(screen); return; }
@@ -110,7 +110,7 @@ export function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === 'SIGNED_IN' && session?.user) window.setTimeout(() => { if (active) void loadAuthenticatedUser(); }, 0);
-      else if (event === 'SIGNED_OUT') { setAuthUserId(''); setUserEmail(''); setProfile(initialProfile); setOpportunities(sampleOpportunities); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing'); }
+      else if (event === 'SIGNED_OUT') { setAuthUserId(''); setUserEmail(''); setProfile(initialProfile); setOpportunities([]); setSelectedOpportunity(null); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing'); }
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, [loadAuthenticatedUser]);
@@ -151,11 +151,12 @@ export function App() {
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
       {currentScreen === 'onboarding' && <OnboardingWizard initialProfile={profile} onComplete={handleOnboardingComplete} onCancel={() => void navigate('home')} />}
       {currentScreen === 'home' && <HomeScreen profile={profile} opportunities={opportunities} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} savedOpportunityIds={savedOpportunityIds} onToggleSave={handleToggleSaveOpportunity} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'detail' && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => void navigate('explore')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={handleApplyOpportunity} onStartAssessment={() => void navigate('assessment')} />}
+      {currentScreen === 'detail' && selectedOpportunity && <OpportunityDetailScreen opportunity={selectedOpportunity} isSaved={savedOpportunityIds.includes(selectedOpportunity.id)} onBack={() => void navigate('explore')} onToggleSave={() => void handleToggleSaveOpportunity(selectedOpportunity.id)} onApply={handleApplyOpportunity} onStartAssessment={() => void navigate('assessment')} />}
       {currentScreen === 'roadmap' && <RoadmapScreen profile={profile} onNavigate={(scr) => void navigate(scr)} />}
       {currentScreen === 'explore' && <OpportunityHub opportunities={opportunities} savedOpportunityIds={savedOpportunityIds} opportunitiesLoading={opportunitiesLoading} onSelectOpportunity={handleSelectOpportunity} onToggleSave={handleToggleSaveOpportunity} />}
       {currentScreen === 'applications' && <ApplicationsScreen applications={applications} onNavigate={(scr) => void navigate(scr)} onStartAssessment={() => void navigate('assessment')} onUpdateStatus={(id, status) => void handleUpdateApplicationStatus(id, status)} onInspectOpportunity={(id) => void handleInspectApplication(id)} />}
       {currentScreen === 'assessment' && <AssessmentScreen profile={profile} onExit={() => void navigate('applications')} />}
+      {currentScreen === 'marga' && <CareerAIChatScreen profile={profile} opportunities={opportunities} onSelectOpportunityById={handleSelectOpportunityById} onNavigate={(scr) => void navigate(scr)} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
       {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
       {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate(authUserId ? 'home' : 'landing')} onNavigate={(scr) => void navigate(scr)} onSignOut={() => void handleSignOut()} />}
