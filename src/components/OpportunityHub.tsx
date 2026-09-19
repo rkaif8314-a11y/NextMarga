@@ -202,7 +202,7 @@ export const OpportunityHub: React.FC<OpportunityHubProps> = ({ opportunities, s
                     <h3 className="mt-3 text-lg font-semibold leading-snug text-slate-950">{item.title}</h3>
                     <p className="mt-1 truncate text-sm text-slate-500">{item.organization || 'Official source'}</p>
                   </div>
-                  <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{item.matchScore ?? 82}% match</span>
+                  {item.matchScore !== undefined ? <span className="shrink-0 rounded-md bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">{item.matchScore}% match</span> : <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Verified</span>}
                 </div>
                 <div className="mt-4 grid gap-2 text-sm text-slate-600">
                   <span className="flex items-center gap-2 font-medium text-amber-700"><CalendarDays className="h-4 w-4" /> {deadlineLabel(item)}</span>
