@@ -43,6 +43,8 @@ export default async function handler(req: Request) {
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   if (!(await isAuthenticated(req))) return json({ error: 'Authentication required.' }, 401);
 
+  if (!process.env.OPENAI_API_KEY) return json({ error: 'Assessment AI is not configured on the server.' }, 503);
+
   try {
     const body = (await req.json()) as Body;
     const responseText = typeof body.responseText === 'string' ? body.responseText.trim() : '';
@@ -50,7 +52,7 @@ export default async function handler(req: Request) {
     if (responseText.length > 8000) return json({ error: 'Assessment response is too long.' }, 400);
 
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return json(fallback);
+
 
     const prompt = `Evaluate this student's assessment answer. Return ONLY valid JSON with exactly these fields: score (number 75-98), feedback (string), strengths (array of exactly 2 strings), improvementTip (string). Be encouraging and specific.\n\nQuestion: ${(body.question || 'Tell us about a difficult problem you solved and how you solved it.').slice(0, 3000)}\nStudent level: ${(body.profile?.currentClass || 'Student').slice(0, 100)}\nAnswer: ${responseText}`;
 
@@ -68,7 +70,7 @@ export default async function handler(req: Request) {
     });
 
     const data = await response.json();
-    if (!response.ok) return json(fallback);
+    if (!response.ok) return json({ error: 'Assessment evaluation service failed.' }, 502);
 
     const raw = String(data.output_text || '').trim();
     const match = raw.match(/\{[\s\S]*\}/);
