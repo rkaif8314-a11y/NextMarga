@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Plus, ArrowRight } from 'lucide-react';
 import { UserProfile, ChatMessage, AppScreen, Opportunity } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface CareerAIChatScreenProps {
   profile: UserProfile;
@@ -48,9 +49,13 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
     setIsLoading(true);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           message: textToSend,
           profile,
