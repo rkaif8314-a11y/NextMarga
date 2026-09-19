@@ -1,20 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, Plus, ArrowRight } from 'lucide-react';
-import { UserProfile, ChatMessage, AppScreen } from '../types';
-import { sampleInitialChatMessages } from '../data/mockData';
+import { UserProfile, ChatMessage, AppScreen, Opportunity } from '../types';
 
 interface CareerAIChatScreenProps {
   profile: UserProfile;
+  opportunities: Opportunity[];
   onSelectOpportunityById: (id: string) => void;
   onNavigate: (screen: AppScreen) => void;
 }
 
 export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
   profile,
+  opportunities,
   onSelectOpportunityById,
   onNavigate,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>(sampleInitialChatMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [{
+    id: 'marga-welcome', sender: 'ai',
+    text: `Hi ${profile.fullName?.split(' ')[0] || 'there'} — I’m Marga, your NextMarga mentor. I can use your profile and the verified opportunities currently loaded in NextMarga to help you decide what to do next.`,
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  }]);
   const [inputVal, setInputVal] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,6 +54,8 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
         body: JSON.stringify({
           message: textToSend,
           profile,
+          opportunities: opportunities.slice(0, 12).map((opportunity) => ({ id: opportunity.id, title: opportunity.title, organization: opportunity.organization, category: opportunity.category, deadline: opportunity.deadline, eligibility: opportunity.eligibility, officialUrl: opportunity.officialUrl, matchScore: opportunity.matchScore })),
+          conversationHistory: [...messages, userMsg].slice(-8).map((message) => ({ role: message.sender === 'user' ? 'user' : 'assistant', content: message.text })),
         }),
       });
 
@@ -58,27 +65,11 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
       const aiMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'ai',
-        text: data.reply || "I am analyzing your academic trajectory to recommend premier opportunities.",
+        text: data.reply || 'Marga could not generate a response. Please try again.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        cards:
-          textToSend.toLowerCase().includes('coding') || textToSend.toLowerCase().includes('class 9')
-            ? [
-                {
-                  id: 'zonal-informatics-olympiad',
-                  title: 'Zonal Informatics Olympiad',
-                  eligibility: 'Class 8-12',
-                  scope: 'National',
-                  opportunityId: 'zonal-informatics-olympiad',
-                },
-                {
-                  id: 'zonal-informatics-olympiad',
-                  title: 'Informatics Olympiad',
-                  eligibility: 'Check current eligibility',
-                  scope: 'India',
-                  opportunityId: 'zonal-informatics-olympiad',
-                },
-              ]
-            : undefined,
+        cards: Array.isArray(data.opportunityIds)
+          ? data.opportunityIds.map((id: unknown) => opportunities.find((opportunity) => opportunity.id === id)).filter((opportunity): opportunity is Opportunity => Boolean(opportunity)).slice(0, 4).map((opportunity) => ({ id: opportunity.id, title: opportunity.title, eligibility: opportunity.eligibility, scope: opportunity.mode || 'Verified opportunity', opportunityId: opportunity.id }))
+          : undefined,
       };
 
       setMessages((prev) => [...prev, aiMsg]);
@@ -88,7 +79,7 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
         {
           id: `ai-${Date.now()}`,
           sender: 'ai',
-          text: `Based on your ${profile.currentClass} profile in ${profile.state || 'India'}, focusing on ${profile.interests.slice(0, 2).join(' and ')} will yield exceptional academic growth.`,
+          text: 'I’m having trouble reaching the mentor service right now. Please retry in a moment rather than relying on an unverified recommendation.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         },
       ]);
