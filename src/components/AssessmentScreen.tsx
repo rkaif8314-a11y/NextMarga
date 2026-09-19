@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Mic, Square, RotateCcw, Sparkles, CheckCircle2, Award } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { UserProfile } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface AssessmentScreenProps {
   profile: UserProfile;
@@ -77,9 +78,13 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
 
     setEvaluating(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/assess-response', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           question: 'Tell us about a time you solved a difficult problem.',
           responseText: textAnswer || 'Audio response recorded by student demonstrating analytical problem-solving.',
@@ -88,17 +93,14 @@ export const AssessmentScreen: React.FC<AssessmentScreenProps> = ({ profile, onE
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Assessment service unavailable.');
       setEvaluationResult(data);
       try {
         confetti({ particleCount: 80, spread: 60 });
       } catch (e) {}
     } catch (e) {
-      setEvaluationResult({
-        score: 94,
-        feedback: "Outstanding structured analysis and problem deconstruction. The methodology demonstrated sharp strategic clarity and clear resolution steps.",
-        strengths: ["Rigorous problem definition", "Decisive execution roadmap"],
-        improvementTip: "Incorporate explicit metric validations to substantiate final impact."
-      });
+      setEvaluationResult(null);
+      alert(e instanceof Error ? e.message : 'Assessment evaluation failed. Please try again.');
     } finally {
       setEvaluating(false);
     }
