@@ -3,10 +3,34 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
 const app = express();
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "";
+const authClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+
+async function requireAuthenticatedUser(req: express.Request, res: express.Response) {
+  if (!authClient) {
+    res.status(503).json({ error: "Server authentication is not configured." });
+    return null;
+  }
+  const authorization = req.header("authorization") || "";
+  const token = authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
+  if (!token) {
+    res.status(401).json({ error: "Authentication required." });
+    return null;
+  }
+  const { data, error } = await authClient.auth.getUser(token);
+  if (error || !data.user) {
+    res.status(401).json({ error: "Invalid or expired session." });
+    return null;
+  }
+  return data.user;
+}
+
 const PORT = 3000;
 
 app.disable("x-powered-by");
@@ -44,6 +68,7 @@ app.get("/api/health", (_req, res) => {
 
 // Career AI chat endpoint
 app.post("/api/chat", async (req, res) => {
+  if (!(await requireAuthenticatedUser(req, res))) return;
   try {
     const message = text(req.body?.message, MAX_CHAT_MESSAGE);
     if (typeof req.body?.message !== "undefined" && !message) {
@@ -114,6 +139,7 @@ Rules:
 
 // Assessment evaluation endpoint
 app.post("/api/assess-response", async (req, res) => {
+  if (!(await requireAuthenticatedUser(req, res))) return;
   try {
     const question = text(req.body?.question, 3000);
     const rawResponseText = req.body?.responseText;
