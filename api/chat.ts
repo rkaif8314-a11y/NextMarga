@@ -62,12 +62,7 @@ export default async function handler(req: Request) {
   if (!auth) return json({ error: 'Authentication required.' }, 401);
 
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return json({
-      reply: 'CareerAI is in demo mode. Add OPENAI_API_KEY to the Vercel project environment variables to enable AI responses.',
-      demoMode: true,
-    });
-  }
+  if (!apiKey) return json({ error: 'Marga AI is not configured on the server.' }, 503);
 
   try {
     const body = (await req.json()) as ChatBody;
@@ -129,15 +124,12 @@ export default async function handler(req: Request) {
     const data = await response.json();
     if (!response.ok) {
       console.error('OpenAI error:', data);
-      return json({
-        reply: 'CareerAI could not complete that request right now. Please try again in a moment.',
-        demoMode: true,
-      }, 200);
+      return json({ error: 'Marga could not complete the request right now. Please try again.' }, 502);
     }
 
     return json({ reply: data.output_text || 'I could not generate a response. Please try again.', opportunityIds: findOpportunityIds(message, opportunities) });
   } catch (error) {
     console.error('Chat API error:', error);
-    return json({ reply: 'CareerAI is temporarily unavailable. Please try again.', demoMode: true }, 200);
+    return json({ error: 'Marga is temporarily unavailable. Please try again.' }, 500);
   }
 }
