@@ -79,7 +79,9 @@ export default async function handler(req: Request) {
       userClient.from('applications').select('status,opportunity_id,applied_date').eq('user_id', auth.user.id).order('updated_at', { ascending: false }).limit(20),
       userClient.from('roadmap_phases').select('phase,title,description,roadmap_goals(text,completed)').eq('user_id', auth.user.id).order('sort_order'),
     ]);
-    const profile = profileResult.data ?? bodyProfile;
+    const profile = profileResult.data
+      ? { fullName: profileResult.data.full_name, currentClass: profileResult.data.current_class, educationalBoard: profileResult.data.educational_board, state: profileResult.data.state, city: profileResult.data.city, interests: profileResult.data.interests, targetPath: profileResult.data.target_path }
+      : bodyProfile;
     const applicationSummary = (applicationResult.data ?? []).map((item) => `${item.status}: ${item.opportunity_id || 'opportunity'}`).join(', ') || 'No tracked applications';
     const roadmapSummary = (roadmapResult.data ?? []).map((phase) => `${phase.phase}: ${phase.title} (${(phase.roadmap_goals ?? []).filter((goal: { completed: boolean }) => goal.completed).length} completed goals)`).join('; ') || 'No roadmap created';
     const message = typeof body.message === 'string' ? body.message.trim() : '';
