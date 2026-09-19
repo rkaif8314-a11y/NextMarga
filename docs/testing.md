@@ -1,15 +1,5 @@
-# Testing Guide
+# NextMarga Testing Notes
 
-Before shipping a change, test the smallest affected surface first and then run the project's normal build and lint checks when available.
+For API changes, test valid requests, missing fields, wrong types, oversized input, malformed JSON, and unexpected AI output. For UI changes, check loading, error, empty, mobile, and keyboard-accessible states.
 
-## Core cases
-
-- Initial loading state
-- Empty and invalid input
-- Successful data response
-- Network/API failure
-- Authenticated and unauthenticated access where applicable
-- Mobile and desktop layouts
-- Keyboard navigation for interactive flows
-
-For AI features, also verify the deterministic fallback path when the model provider is unavailable.
+Keep validation tests separate from model-output tests so request failures and AI response failures are easy to diagnose.
