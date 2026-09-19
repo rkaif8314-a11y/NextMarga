@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Search, TrendingUp, ClipboardList, User } from 'lucide-react';
+import { Home, Search, TrendingUp, ClipboardList, User, Sparkles } from 'lucide-react';
 import { AppScreen } from '../types';
 
 interface BottomNavProps {
@@ -13,12 +13,13 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
     { id: 'explore', label: 'Explore', icon: Search },
     { id: 'roadmap', label: 'Roadmap', icon: TrendingUp },
     { id: 'applications', label: 'Applications', icon: ClipboardList },
+    { id: 'marga', label: 'Marga', icon: Sparkles },
     { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white/95 backdrop-blur-xl shadow-[0_-8px_24px_rgba(15,23,42,0.06)]">
-      <div className="mx-auto flex max-w-2xl items-center justify-between px-3 py-2">
+      <div className="mx-auto flex max-w-3xl items-center justify-between px-3 py-2">
         {navItems.map((item) => {
           const isActive = currentScreen === item.id;
           const Icon = item.icon;
@@ -27,7 +28,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ currentScreen, onNavigate 
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`group flex min-w-16 flex-col items-center justify-center rounded-lg px-2 py-1.5 text-center transition-colors ${
+              className={`group flex min-w-12 flex-col items-center justify-center rounded-lg px-2 py-1.5 text-center transition-colors ${
                 isActive ? 'text-sky-700' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
