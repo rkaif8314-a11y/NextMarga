@@ -1,7 +1,5 @@
 import React, { Suspense, lazy, useState, useEffect, useCallback } from 'react';
 import { UserProfile, Opportunity, AppNotification, ApplicationItem, AppScreen } from './types';
-import { initialProfile, sampleNotifications, sampleApplications } from './data/mockData';
-
 const emptyProfile: UserProfile = { fullName: '', dob: '', gender: '', phone: '', fatherName: '', motherName: '', guardianPhone: '', schoolName: '', currentClass: '', educationalBoard: '', state: '', city: '', interests: [], targetPath: '', avatarUrl: '' };
 import { TopHeader } from './components/TopHeader';
 import { BottomNav } from './components/BottomNav';
@@ -110,7 +108,7 @@ export function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (event === 'SIGNED_IN' && session?.user) window.setTimeout(() => { if (active) void loadAuthenticatedUser(); }, 0);
-      else if (event === 'SIGNED_OUT') { setAuthUserId(''); setUserEmail(''); setProfile(initialProfile); setOpportunities([]); setSelectedOpportunity(null); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); localStorage.removeItem('nextmarga_profile'); setCurrentScreen('landing'); }
+      else if (event === 'SIGNED_OUT') { setAuthUserId(''); setUserEmail(''); setProfile(emptyProfile); setOpportunities([]); setSelectedOpportunity(null); setSavedOpportunityIds([]); setNotifications([]); setApplications([]); if (authUserId) localStorage.removeItem(`nextmarga_profile_${authUserId}`); setCurrentScreen('landing'); }
     });
     return () => { active = false; subscription.unsubscribe(); };
   }, [loadAuthenticatedUser]);
@@ -139,13 +137,13 @@ export function App() {
   const handleSignOut = useCallback(async () => { setAppError(''); const { error } = await signOut(); if (error) setAppError(error.message); }, []);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-  const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'profile'].includes(currentScreen);
+  const showBottomNav = ['home', 'explore', 'roadmap', 'applications', 'marga', 'profile'].includes(currentScreen);
   const showTopHeader = !['landing', 'auth', 'onboarding'].includes(currentScreen);
   if (authLoading) return <div className="min-h-screen bg-white text-slate-700 flex items-center justify-center"><div className="text-center"><div className="text-xs uppercase tracking-[0.3em] text-slate-400">NextMarga</div><div className="mt-3 text-sm text-slate-500">Preparing your opportunity path...</div></div></div>;
 
   return <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-sky-100 selection:text-slate-950">
     {showTopHeader && <TopHeader profile={profile} userEmail={userEmail} unreadNotificationsCount={unreadCount} onNavigate={(scr) => void navigate(scr)} />}
-    {appError && <div className="mx-auto w-full max-w-xl px-5 pt-4"><div className="rounded-xl border border-red-400/20 bg-red-400/5 px-4 py-3 text-xs text-red-200">{appError}</div></div>}
+    {appError && <div className="mx-auto w-full max-w-xl px-5 pt-4"><div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">{appError}</div></div>}
     <main className="flex-1"><Suspense fallback={<ScreenLoader />}>
       {currentScreen === 'landing' && <LandingScreen opportunities={opportunities} savedOpportunityIds={savedOpportunityIds} opportunitiesLoading={opportunitiesLoading} onNavigate={(scr) => void navigate(scr)} onStartOnboarding={() => setCurrentScreen('auth')} onSelectOpportunity={handleSelectOpportunity} onToggleSave={handleToggleSaveOpportunity} />}
       {currentScreen === 'auth' && <AuthScreen onBack={() => setCurrentScreen('landing')} onAuthenticated={() => void loadAuthenticatedUser()} />}
