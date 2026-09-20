@@ -62,6 +62,13 @@ function allowAiRequest(req: express.Request): boolean {
   return true;
 }
 
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of aiRequests) {
+    if (entry.resetAt <= now) aiRequests.delete(key);
+  }
+}, AI_RATE_WINDOW_MS).unref();
+
 function text(value: unknown, maxLength = MAX_PROFILE_FIELD): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
