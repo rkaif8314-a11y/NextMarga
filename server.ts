@@ -36,12 +36,31 @@ app.disable("x-powered-by");
 app.use(express.json({ limit: "64kb" }));
 app.use((_req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "DENY");
   next();
 });
 
 const MAX_CHAT_MESSAGE = 6000;
 const MAX_ASSESSMENT_RESPONSE = 8000;
 const MAX_PROFILE_FIELD = 200;
+const AI_RATE_WINDOW_MS = 60_000;
+const AI_RATE_LIMIT = 20;
+const aiRequests = new Map<string, { count: number; resetAt: number }>();
+
+function allowAiRequest(req: express.Request): boolean {
+  const now = Date.now();
+  const key = req.ip || req.socket.remoteAddress || "unknown";
+  const current = aiRequests.get(key);
+  if (!current || current.resetAt <= now) {
+    aiRequests.set(key, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
+    return true;
+  }
+  if (current.count >= AI_RATE_LIMIT) return false;
+  current.count += 1;
+  return true;
+}
 
 function text(value: unknown, maxLength = MAX_PROFILE_FIELD): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -62,6 +81,7 @@ app.get("/api/health", (_req, res) => {
 
 app.post("/api/chat", async (req, res) => {
   if (!(await requireAuthenticatedUser(req, res))) return;
+  if (!allowAiRequest(req)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
   try {
     const message = text(req.body?.message, MAX_CHAT_MESSAGE);
     if (typeof req.body?.message !== "undefined" && !message) return res.status(400).json({ error: "Message must be a non-empty string." });
@@ -92,6 +112,7 @@ app.post("/api/chat", async (req, res) => {
 
 app.post("/api/assess-response", async (req, res) => {
   if (!(await requireAuthenticatedUser(req, res))) return;
+  if (!allowAiRequest(req)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
   try {
     const question = text(req.body?.question, 3000);
     const rawResponseText = req.body?.responseText;
