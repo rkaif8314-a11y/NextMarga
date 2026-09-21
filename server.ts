@@ -33,6 +33,7 @@ async function requireAuthenticatedUser(req: express.Request, res: express.Respo
 
 const PORT = 3000;
 app.disable("x-powered-by");
+app.set("trust proxy", 1);
 app.use(express.json({ limit: "64kb" }));
 app.use((_req, res, next) => {
   res.setHeader("Cache-Control", "no-store");
@@ -47,13 +48,19 @@ const MAX_ASSESSMENT_RESPONSE = 8000;
 const MAX_PROFILE_FIELD = 200;
 const AI_RATE_WINDOW_MS = 60_000;
 const AI_RATE_LIMIT = 20;
+const MAX_RATE_LIMIT_KEYS = 10_000;
 const aiRequests = new Map<string, { count: number; resetAt: number }>();
 
-function allowAiRequest(req: express.Request): boolean {
+function allowAiRequest(key: string): boolean {
   const now = Date.now();
-  const key = req.ip || req.socket.remoteAddress || "unknown";
   const current = aiRequests.get(key);
   if (!current || current.resetAt <= now) {
+    if (aiRequests.size >= MAX_RATE_LIMIT_KEYS) {
+      for (const [entryKey, entry] of aiRequests) {
+        if (entry.resetAt <= now) aiRequests.delete(entryKey);
+      }
+      if (aiRequests.size >= MAX_RATE_LIMIT_KEYS) return false;
+    }
     aiRequests.set(key, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
     return true;
   }
@@ -87,8 +94,9 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.post("/api/chat", async (req, res) => {
-  if (!(await requireAuthenticatedUser(req, res))) return;
-  if (!allowAiRequest(req)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
+  const user = await requireAuthenticatedUser(req, res);
+  if (!user) return;
+  if (!allowAiRequest(`user:${user.id}`)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
   try {
     const message = text(req.body?.message, MAX_CHAT_MESSAGE);
     if (typeof req.body?.message !== "undefined" && !message) return res.status(400).json({ error: "Message must be a non-empty string." });
@@ -118,8 +126,9 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.post("/api/assess-response", async (req, res) => {
-  if (!(await requireAuthenticatedUser(req, res))) return;
-  if (!allowAiRequest(req)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
+  const user = await requireAuthenticatedUser(req, res);
+  if (!user) return;
+  if (!allowAiRequest(`user:${user.id}`)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
   try {
     const question = text(req.body?.question, 3000);
     const rawResponseText = req.body?.responseText;
