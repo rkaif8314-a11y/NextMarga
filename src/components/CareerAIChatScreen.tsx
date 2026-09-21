@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Plus, ArrowRight } from 'lucide-react';
+import { Send, Sparkles, ArrowRight } from 'lucide-react';
 import { UserProfile, ChatMessage, AppScreen, Opportunity } from '../types';
 import { supabase } from '../lib/supabase';
 
@@ -95,7 +95,6 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
 
   return (
     <div className="max-w-2xl mx-auto h-[calc(100vh-130px)] flex flex-col justify-between px-4 pb-20 relative bg-[#0A0A0A] bg-dot-pattern">
-      {/* Top AI Header Badge */}
       <div className="pt-2 pb-3 text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[#121212] border border-white/15 text-[10px] uppercase tracking-[0.25em] font-mono text-white/80">
           <Sparkles className="w-3.5 h-3.5 text-white/70" />
@@ -103,8 +102,7 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
         </div>
       </div>
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin">
+      <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin" aria-live="polite">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -117,25 +115,24 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
                   : 'bg-[#121212] text-[#F5F2ED] border border-white/10 font-light'
               }`}
             >
-              {/* Message text formatted with linebreaks */}
               <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>
 
-              {/* Embedded Opportunity Cards */}
               {msg.cards && msg.cards.length > 0 && (
-                <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1" aria-label="Related verified opportunities">
                   {msg.cards.map((card) => (
-                    <div
+                    <button
                       key={card.id}
+                      type="button"
                       onClick={() => card.opportunityId && onSelectOpportunityById(card.opportunityId)}
-                      className="min-w-[170px] bg-[#0A0A0A] border border-white/15 rounded-lg p-3 cursor-pointer hover:border-white/40 transition-all text-[#F5F2ED]"
+                      className="min-w-[170px] bg-[#0A0A0A] border border-white/15 rounded-lg p-3 text-left cursor-pointer hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-all text-[#F5F2ED]"
                     >
                       <div className="font-serif-luxury font-medium text-xs truncate">{card.title}</div>
                       <div className="text-[10px] text-white/50 mt-1 font-mono">{card.eligibility}</div>
                       <div className="mt-2 flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-white/80">
                         <span>{card.scope}</span>
-                        <ArrowRight className="w-3 h-3 text-white/60" />
+                        <ArrowRight className="w-3 h-3 text-white/60" aria-hidden="true" />
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               )}
@@ -152,9 +149,9 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
         ))}
 
         {isLoading && (
-          <div className="flex justify-start">
+          <div className="flex justify-start" role="status">
             <div className="bg-[#121212] border border-white/15 rounded-xl px-4 py-3 text-xs text-white/60 flex items-center gap-2 font-mono">
-              <Sparkles className="w-3.5 h-3.5 text-white/70 animate-spin" />
+              <Sparkles className="w-3.5 h-3.5 text-white/70 animate-spin" aria-hidden="true" />
               <span>CareerAI synthesizing curriculum parameters...</span>
             </div>
           </div>
@@ -163,42 +160,33 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggestion Chips & Input */}
       <div className="pt-2 space-y-2 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A] to-transparent">
-        {/* Suggestion Prompt Chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none" aria-label="Suggested prompts">
           {[
             "🧭 What trajectory should I prioritize next?",
             "🏆 Top Olympiads for Class 8",
             "💰 Regional & National Scholarships",
             "🐍 Python & Machine Learning milestones",
-          ].map((prompt, idx) => (
+          ].map((prompt) => (
             <button
-              key={idx}
+              key={prompt}
+              type="button"
               onClick={() => handleSend(prompt)}
-              className="flex-shrink-0 px-3 py-1.5 rounded bg-[#121212] border border-white/10 text-[10px] font-mono text-white/70 hover:border-white/30 hover:text-white transition-colors"
+              className="flex-shrink-0 px-3 py-1.5 rounded bg-[#121212] border border-white/10 text-[10px] font-mono text-white/70 hover:border-white/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors"
             >
               {prompt}
             </button>
           ))}
         </div>
 
-        {/* Input Bar */}
         <div className="flex items-center gap-2 bg-[#121212] border border-white/15 rounded-xl p-1.5 focus-within:ring-1 focus-within:ring-white/40 focus-within:border-white/40">
-          <button
-            type="button"
-            className="p-2 text-white/40 hover:text-white rounded-lg transition-colors"
-            title="Attach file"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-
           <input
             type="text"
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Consult CareerAI on admissions, Olympiads, and roadmaps..."
+            aria-label="Message Marga"
             className="flex-1 text-xs bg-transparent border-none text-[#F5F2ED] placeholder-white/30 focus:outline-none px-1 tracking-wide"
           />
 
@@ -206,9 +194,10 @@ export const CareerAIChatScreen: React.FC<CareerAIChatScreenProps> = ({
             type="button"
             onClick={() => handleSend()}
             disabled={!inputVal.trim() || isLoading}
-            className="p-2 rounded-lg bg-[#F5F2ED] text-black disabled:opacity-30 hover:bg-white transition-all shadow-sm"
+            aria-label="Send message"
+            className="p-2 rounded-lg bg-[#F5F2ED] text-black disabled:opacity-30 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-all shadow-sm"
           >
-            <Send className="w-3.5 h-3.5" />
+            <Send className="w-3.5 h-3.5" aria-hidden="true" />
           </button>
         </div>
       </div>
