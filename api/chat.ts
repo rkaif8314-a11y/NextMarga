@@ -89,6 +89,8 @@ export default async function handler(req: Request) {
   try {
     const body = (await req.json()) as ChatBody;
     const bodyProfile = body.profile ?? {};
+    const message = typeof body.message === 'string' ? body.message.trim() : '';
+    if (message.length > 6000) return json({ error: 'Message is too long.' }, 400);
     const opportunities = Array.isArray(body.opportunities) ? body.opportunities.slice(0, 12) : [];
     const userClient = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${auth.token}` } } });
     const [profileResult, applicationResult, roadmapResult] = await Promise.all([
@@ -101,11 +103,6 @@ export default async function handler(req: Request) {
       : bodyProfile;
     const applicationSummary = (applicationResult.data ?? []).map((item) => `${item.status}: ${item.opportunity_id || 'opportunity'}`).join(', ') || 'No tracked applications';
     const roadmapSummary = (roadmapResult.data ?? []).map((phase) => `${phase.phase}: ${phase.title} (${(phase.roadmap_goals ?? []).filter((goal: { completed: boolean }) => goal.completed).length} completed goals)`).join('; ') || 'No roadmap created';
-    const message = typeof body.message === 'string' ? body.message.trim() : '';
-
-    if (message.length > 6000) {
-      return json({ error: 'Message is too long.' }, 400);
-    }
 
     const profileSummary = [
       `Name: ${profile.fullName || 'Student'}`,
