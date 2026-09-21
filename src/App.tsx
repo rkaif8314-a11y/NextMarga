@@ -7,6 +7,7 @@ import { LandingScreen } from './components/LandingScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { OnboardingWizard } from './components/OnboardingWizard';
 import { LegalScreen } from './components/LegalScreen';
+import { CareerAIChatScreen } from './components/CareerAIChatScreen';
 import { supabase } from './lib/supabase';
 import { signOut } from './lib/auth';
 import { getUserProfile, saveUserProfile } from './lib/profile';
@@ -157,14 +158,9 @@ export function App() {
       {currentScreen === 'marga' && <CareerAIChatScreen profile={profile} opportunities={opportunities} onSelectOpportunityById={handleSelectOpportunityById} onNavigate={(scr) => void navigate(scr)} />}
       {currentScreen === 'notifications' && <NotificationsScreen notifications={notifications} onBack={() => void navigate('home')} onSelectNotification={handleSelectNotification} onMarkAllRead={() => void handleMarkAllNotificationsRead()} />}
       {currentScreen === 'profile' && <ProfileScreen profile={profile} onBack={() => void navigate('home')} onSave={handleProfileSave} onStartOnboarding={() => setCurrentScreen('onboarding')} />}
-      {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate(authUserId ? 'home' : 'landing')} onNavigate={(scr) => void navigate(scr)} onSignOut={() => void handleSignOut()} />}
-      {currentScreen === 'legal-privacy' && <LegalScreen page="privacy" onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'legal-terms' && <LegalScreen page="terms" onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'legal-verification' && <LegalScreen page="verification" onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
-      {currentScreen === 'support' && <LegalScreen page="support" onBack={() => void navigate('home')} onNavigate={(scr) => void navigate(scr)} />}
+      {currentScreen === 'settings' && <SettingsScreen onBack={() => void navigate(authUserId ? 'home' : 'landing')} onSignOut={() => void handleSignOut()} />}
+      {currentScreen === 'legal' && <LegalScreen onBack={() => void navigate(authUserId ? 'settings' : 'landing')} />}
     </Suspense></main>
     {showBottomNav && <BottomNav currentScreen={currentScreen} onNavigate={(scr) => void navigate(scr)} />}
   </div>;
 }
-
-export default App;
