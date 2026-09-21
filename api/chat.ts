@@ -15,10 +15,13 @@ type ChatBody = {
   opportunities?: Array<{ id: string; title?: string; organization?: string; category?: string; deadline?: string; eligibility?: string; officialUrl?: string; matchScore?: number }>;
 };
 
-
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
 const authClient = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
+const AI_RATE_WINDOW_MS = 60_000;
+const AI_RATE_LIMIT = 20;
+const MAX_RATE_KEYS = 10_000;
+const aiRequests = new Map<string, { count: number; resetAt: number }>();
 
 async function requireUser(req: Request) {
   if (!authClient) return null;
@@ -28,6 +31,24 @@ async function requireUser(req: Request) {
   const { data, error } = await authClient.auth.getUser(token);
   if (error || !data.user) return null;
   return { user: data.user, token };
+}
+
+function allowAiRequest(userId: string) {
+  const now = Date.now();
+  const current = aiRequests.get(userId);
+  if (!current || current.resetAt <= now) {
+    if (aiRequests.size >= MAX_RATE_KEYS) {
+      for (const [key, entry] of aiRequests) {
+        if (entry.resetAt <= now) aiRequests.delete(key);
+      }
+      if (aiRequests.size >= MAX_RATE_KEYS) return false;
+    }
+    aiRequests.set(userId, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
+    return true;
+  }
+  if (current.count >= AI_RATE_LIMIT) return false;
+  current.count += 1;
+  return true;
 }
 
 function findOpportunityIds(message: string, opportunities: ChatBody['opportunities'] = []) {
@@ -60,6 +81,7 @@ export default async function handler(req: Request) {
   if (!authClient) return json({ error: 'Server authentication is not configured.' }, 503);
   const auth = await requireUser(req);
   if (!auth) return json({ error: 'Authentication required.' }, 401);
+  if (!allowAiRequest(auth.user.id)) return json({ error: 'Too many AI requests. Please try again in a minute.' }, 429);
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return json({ error: 'Marga AI is not configured on the server.' }, 503);
@@ -105,7 +127,7 @@ export default async function handler(req: Request) {
     const history = (body.conversationHistory || [])
       .filter((item) => (item.role === 'user' || item.role === 'assistant') && typeof item.content === 'string')
       .slice(-8)
-      .map((item) => ({ role: item.role, content: item.content.slice(0, 6000) }));
+      .map((item) => ({ role: item.role, content: item.content.slice(0, 2000) }));
 
     const response = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
