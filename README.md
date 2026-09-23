@@ -252,3 +252,8 @@ CareerAI is intended to support students with explanations, planning, and struct
 ## Environment Configuration
 
 Keep local configuration in an untracked environment file. Public client configuration and server-only secrets must be treated differently: browser-exposed values should never be used as a substitute for server-side authorization, and private AI credentials must remain outside client bundles. When adding a new environment variable, document its purpose and whether it is safe for browser exposure.
+
+
+## Validation Checklist
+
+For changes affecting forms, API routes, authentication, or opportunity data, verify at least: valid input, missing input, malformed input, unexpectedly long input, unauthorized access, loading state, error state, and successful recovery. Production builds should also be run before release so TypeScript and bundling problems are caught before deployment.
