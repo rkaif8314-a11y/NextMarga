@@ -237,3 +237,8 @@ NextMarga is an actively developed project. Features and opportunity coverage co
 ### ⭐ If NextMarga helps you, consider starring the repository.
 
 **NextMarga — Find your opportunity. Build your roadmap. Shape your future.**
+
+
+## Product Scope
+
+NextMarga is organized around four connected student workflows: discover an opportunity, understand eligibility and preparation, track an application, and build a longer-term roadmap. The product is designed so that discovery does not end at a search result; each opportunity should lead to a clear next action.
