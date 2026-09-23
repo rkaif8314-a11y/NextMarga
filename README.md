@@ -242,3 +242,8 @@ NextMarga is an actively developed project. Features and opportunity coverage co
 ## Product Scope
 
 NextMarga is organized around four connected student workflows: discover an opportunity, understand eligibility and preparation, track an application, and build a longer-term roadmap. The product is designed so that discovery does not end at a search result; each opportunity should lead to a clear next action.
+
+
+## CareerAI Guidance Model
+
+CareerAI is intended to support students with explanations, planning, and structured next steps. AI-generated guidance should be treated as assistance rather than an authoritative source for eligibility, deadlines, admissions, or financial decisions. Time-sensitive opportunity details should be checked against the relevant official source before a student acts on them.
