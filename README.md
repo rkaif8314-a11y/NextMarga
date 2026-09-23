@@ -247,3 +247,8 @@ NextMarga is organized around four connected student workflows: discover an oppo
 ## CareerAI Guidance Model
 
 CareerAI is intended to support students with explanations, planning, and structured next steps. AI-generated guidance should be treated as assistance rather than an authoritative source for eligibility, deadlines, admissions, or financial decisions. Time-sensitive opportunity details should be checked against the relevant official source before a student acts on them.
+
+
+## Environment Configuration
+
+Keep local configuration in an untracked environment file. Public client configuration and server-only secrets must be treated differently: browser-exposed values should never be used as a substitute for server-side authorization, and private AI credentials must remain outside client bundles. When adding a new environment variable, document its purpose and whether it is safe for browser exposure.
