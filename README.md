@@ -257,3 +257,14 @@ Keep local configuration in an untracked environment file. Public client configu
 ## Validation Checklist
 
 For changes affecting forms, API routes, authentication, or opportunity data, verify at least: valid input, missing input, malformed input, unexpectedly long input, unauthorized access, loading state, error state, and successful recovery. Production builds should also be run before release so TypeScript and bundling problems are caught before deployment.
+
+
+## Contribution Workflow
+
+1. Create a focused branch for one change.
+2. Keep the change small enough to review.
+3. Run the relevant checks locally.
+4. Confirm that secrets and generated files are not included.
+5. Open a pull request with a concise description of the behavior changed and the validation performed.
+
+Prefer changes that improve reliability, accessibility, security, or the student journey rather than adding complexity without a clear user benefit.
