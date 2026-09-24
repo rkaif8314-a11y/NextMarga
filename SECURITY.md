@@ -13,3 +13,10 @@ The deployed `/api/*` functions validate request methods, authenticate users, an
 ## Reporting
 
 For a suspected security issue, do not publish credentials or private student data in an issue. Rotate exposed credentials first and report the issue privately to the repository owner.
+
+## AI endpoint protections
+
+- AI requests are authenticated before model access.
+- Requests are rate-limited per authenticated user.
+- The server returns `Retry-After` when the AI limit is reached so clients can back off cleanly.
+- AI calls have bounded latency to prevent requests from remaining open indefinitely.
