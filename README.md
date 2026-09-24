@@ -159,7 +159,18 @@ npm install
 
 ### 3. Configure environment variables
 
-Create a `.env.local` file and add the required Supabase and AI configuration used by the application.
+Create a `.env.local` file with the required configuration:
+
+| Variable | Purpose |
+|---|---|
+| `VITE_SUPABASE_URL` | Browser Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Browser-safe Supabase key |
+| `SUPABASE_URL` | Server Supabase URL |
+| `SUPABASE_ANON_KEY` | Server auth lookup key |
+| `GEMINI_API_KEY` | Server-side CareerAI credential |
+| `GEMINI_MODEL` | Optional Gemini model override |
+
+Use `.env.example` as the template.
 
 **Never commit production secrets or API keys to GitHub.**
 
