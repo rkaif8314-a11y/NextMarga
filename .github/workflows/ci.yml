@@ -34,5 +34,8 @@ jobs:
       - name: Type check
         run: bun run lint
 
+      - name: Repository whitespace check
+        run: git diff --check
+
       - name: Production build
         run: bun run build
