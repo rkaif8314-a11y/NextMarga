@@ -61,7 +61,7 @@ function rateLimitKey(userId: string): string {
   return `user:${hash >>> 0}`;
 }
 
-function allowAiRequest(key: string): boolean {
+function allowAiRequest(key: string): number {
   const now = Date.now();
   const current = aiRequests.get(key);
   if (!current || current.resetAt <= now) {
@@ -69,14 +69,14 @@ function allowAiRequest(key: string): boolean {
       for (const [entryKey, entry] of aiRequests) {
         if (entry.resetAt <= now) aiRequests.delete(entryKey);
       }
-      if (aiRequests.size >= MAX_RATE_LIMIT_KEYS) return false;
+      if (aiRequests.size >= MAX_RATE_LIMIT_KEYS) return Math.ceil(AI_RATE_WINDOW_MS / 1000);
     }
     aiRequests.set(key, { count: 1, resetAt: now + AI_RATE_WINDOW_MS });
-    return true;
+    return 0;
   }
-  if (current.count >= AI_RATE_LIMIT) return false;
+  if (current.count >= AI_RATE_LIMIT) return Math.max(1, Math.ceil((current.resetAt - now) / 1000));
   current.count += 1;
-  return true;
+  return 0;
 }
 
 setInterval(() => {
@@ -120,7 +120,11 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/chat", async (req, res) => {
   const user = await requireAuthenticatedUser(req, res);
   if (!user) return;
-  if (!allowAiRequest(rateLimitKey(user.id))) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
+  const retryAfterSeconds = allowAiRequest(rateLimitKey(user.id));
+  if (retryAfterSeconds > 0) {
+    res.setHeader("Retry-After", String(retryAfterSeconds));
+    return res.status(429).json({ error: "Too many AI requests. Please try again later.", retryAfterSeconds });
+  }
   try {
     const message = text(req.body?.message, MAX_CHAT_MESSAGE);
     if (typeof req.body?.message !== "undefined" && !message) return res.status(400).json({ error: "Message must be a non-empty string." });
