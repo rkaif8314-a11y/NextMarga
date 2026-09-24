@@ -52,6 +52,15 @@ const AI_RATE_LIMIT = 20;
 const MAX_RATE_LIMIT_KEYS = 10_000;
 const aiRequests = new Map<string, { count: number; resetAt: number }>();
 
+function rateLimitKey(userId: string): string {
+  let hash = 2166136261;
+  for (let i = 0; i < userId.length; i += 1) {
+    hash ^= userId.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `user:${hash >>> 0}`;
+}
+
 function allowAiRequest(key: string): boolean {
   const now = Date.now();
   const current = aiRequests.get(key);
@@ -111,7 +120,7 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/chat", async (req, res) => {
   const user = await requireAuthenticatedUser(req, res);
   if (!user) return;
-  if (!allowAiRequest(`user:${user.id}`)) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
+  if (!allowAiRequest(rateLimitKey(user.id))) return res.status(429).json({ error: "Too many AI requests. Please try again in a minute." });
   try {
     const message = text(req.body?.message, MAX_CHAT_MESSAGE);
     if (typeof req.body?.message !== "undefined" && !message) return res.status(400).json({ error: "Message must be a non-empty string." });
